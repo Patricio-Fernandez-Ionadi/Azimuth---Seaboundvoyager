@@ -16,6 +16,9 @@ export class PopupManager {
 
 	createPopup(x, y, clickedZone) {
 		if (this.scene.game.interactionState.isPopupOpen) return
+		// Cerrar cualquier popup existente antes de crear uno nuevo
+		this.clearPopups()
+
 		const popupWidth = 300
 		const popupHeight = 270
 
@@ -24,12 +27,6 @@ export class PopupManager {
 		if (y + popupHeight > this.scene.game.canvas.height)
 			y = this.scene.game.canvas.height - popupHeight
 
-		// Cerrar cualquier popup existente antes de crear uno nuevo
-		this.uiManager.components.forEach((component) => {
-			if (component instanceof Popup) {
-				component.close()
-			}
-		})
 		const popup = new Popup(
 			x,
 			y,
@@ -56,6 +53,14 @@ export class PopupManager {
 
 		// Añadir el popup al UIManager
 		this.uiManager.addComponent(popup)
+	}
+
+	clearPopups() {
+		this.uiManager.components.forEach((component) => {
+			if (component instanceof Popup) {
+				component.close()
+			}
+		})
 	}
 
 	handleClick(mouseX, mouseY) {

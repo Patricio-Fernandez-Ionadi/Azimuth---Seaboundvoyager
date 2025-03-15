@@ -8,12 +8,13 @@ export class Button {
 		this.labelX = lx
 		this.labelY = ly
 		this.fontSize = fz
+		this.isHovered = false
+
 		// Cargar imágenes para los botones
 		this.bar0Img = new Image()
 		this.bar0Img.src = '/src/components/assets/Bar_0.png'
 		this.bar1Img = new Image()
 		this.bar1Img.src = '/src/components/assets/Bar_1.png'
-		this.isHovered = false
 	}
 
 	isPointInside(mouseX, mouseY) {

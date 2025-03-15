@@ -48,9 +48,10 @@ export class Game {
 			new PuertoValerisScene(this)
 		)
 		// Establecer escena inicial
-		// this.sceneManager.changeScene(SCENES.menu, false)
+		this.sceneManager.changeScene(SCENES.menu, false)
+		// this.sceneManager.changeScene(SCENES.creation)
 		// this.sceneManager.changeScene(SCENES.map)
-		this.sceneManager.changeScene(SCENES.city.valeris)
+		// this.sceneManager.changeScene(SCENES.city.valeris)
 
 		/* Estados */
 		this.interactionState = {

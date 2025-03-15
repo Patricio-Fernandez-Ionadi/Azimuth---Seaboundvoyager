@@ -55,7 +55,6 @@ export class DialogManager {
 			this.selectedOptionIndex = 0
 			this.currentMessage = null
 			this.currentOptions = null
-			this.eventSystem.emit('dialogEnded', {})
 		}
 	}
 
@@ -74,9 +73,11 @@ export class DialogManager {
 		ctx.fillRect(x, y, boxWidth, boxHeight)
 
 		// Dibujar el texto
+		ctx.save()
 		ctx.fillStyle = 'white'
 		ctx.font = '16px Arial'
 		ctx.fillText(this.currentMessage, x + padding, y + padding + 20)
+		ctx.restore()
 	}
 
 	renderOptionsBox() {
@@ -94,10 +95,12 @@ export class DialogManager {
 		ctx.fillRect(x, y, boxWidth, boxHeight)
 
 		// Mostrar cada opción en pantalla
+		ctx.save()
 		this.currentOptions.forEach((option, index) => {
 			ctx.fillStyle = this.selectedOptionIndex === index ? 'yellow' : 'white'
 			ctx.font = '16px Arial'
 			ctx.fillText(option.text, x + padding, y + padding + 30 * index)
 		})
+		ctx.restore()
 	}
 }

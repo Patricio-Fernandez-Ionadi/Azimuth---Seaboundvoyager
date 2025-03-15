@@ -6,7 +6,7 @@ export class Player {
 		this.width = 32
 		this.height = 32
 		this.color = 'red'
-		this.speed = 2 // Velocidad de movimiento
+		this.speed = 3 // Velocidad de movimiento
 		this.velocity = {
 			x: 0,
 			y: 0,
@@ -14,23 +14,27 @@ export class Player {
 	}
 
 	update(keys) {
-		if (
-			(keys?.['ArrowUp'] || keys?.['w']) &&
-			!this.game.sceneManager.activeScene.currentNPCWithOptions
-		) {
+		const interactingWithNPC =
+			!!this.game.sceneManager.activeScene.dialogManager.currentOptions
+
+		const moveUp = (keys?.['ArrowUp'] || keys?.['w']) && !interactingWithNPC
+		const moveBot = (keys?.['ArrowDown'] || keys?.['s']) && !interactingWithNPC
+
+		const moveLeft = (keys?.['ArrowLeft'] || keys?.['a']) && !interactingWithNPC
+		const moveRight =
+			(keys?.['ArrowRight'] || keys?.['d']) && !interactingWithNPC
+
+		if (moveUp) {
 			this.velocity.y = -this.speed
-		} else if (
-			(keys?.['ArrowDown'] || keys?.['s']) &&
-			!this.game.sceneManager.activeScene.currentNPCWithOptions
-		) {
+		} else if (moveBot) {
 			this.velocity.y = this.speed
 		} else {
 			this.velocity.y = 0
 		}
 
-		if (keys?.['ArrowLeft'] || keys?.['a']) {
+		if (moveLeft) {
 			this.velocity.x = -this.speed
-		} else if (keys?.['ArrowRight'] || keys?.['d']) {
+		} else if (moveRight) {
 			this.velocity.x = this.speed
 		} else {
 			this.velocity.x = 0

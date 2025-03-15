@@ -1,13 +1,12 @@
 // src/scenes/ValerisScene.js
 import { Camera } from '../../core/Camera.js'
 import { UIManager } from '../../core/managers/UIManager.js'
+import { DialogManager } from './DialogManager.js'
 
 import { NPC } from '../../entities/npcs/NPC.js'
 import { Button } from '../../components/Button.js'
 
 import { SCENES } from '../../core/constants.js'
-
-import { DialogManager } from './DialogManager.js'
 
 const NPCS = [
 	new NPC(200, 200, 'blue', [
@@ -43,9 +42,7 @@ export class PuertoValerisScene {
 		this.uiManager = new UIManager(this.game)
 
 		this.camera = new Camera(this.game)
-		this.mapWidth = 1980
-		this.mapHeight = 1080
-		this.camera.setMapBounds(this.mapWidth, this.mapHeight)
+		this.camera.setMapBounds(1984 /* 124 * 16 */, 1088 /* 68 * 16 */)
 
 		this.npcs = NPCS.map(
 			(npcData) =>
@@ -61,48 +58,71 @@ export class PuertoValerisScene {
 		this.dialogManager = new DialogManager(this.game)
 
 		// Suscripcion a eventos
-		this.game.eventSystem.on('npcInteracted', ({ npc }) => {
+		this.game.eventSystem.on('npcInteracted', (npc) => {
 			this.dialogManager.startDialogue(npc)
 		})
-		this.game.eventSystem.on('interactionEnded', ({ npc }) => {
+		this.game.eventSystem.on('interactionEnded', (npc) => {
 			console.log(`Fin de interacción con NPC en (${npc.x}, ${npc.y})`)
-		})
-		this.game.eventSystem.on('dialogEnded', () => {
-			console.log('Diálogo finalizado')
 		})
 	}
 
-	update(deltatime) {
+	update() {
+		this.checkNPCInteraction()
+		this.handleNPCOptions()
+
 		this.game.player.update(this.keys)
 		this.camera.update()
 
-		// Verificar interacción con NPCs
-		for (const npc of this.npcs) {
-			const playerX = this.game.player.x + this.game.player.width / 2
-			const playerY = this.game.player.y + this.game.player.height / 2
+		if (
+			!this.keys['w'] &&
+			!this.keys['s'] &&
+			!this.keys['q'] &&
+			!this.keys['e']
+		) {
+			this.keyPressed = false
+		}
+	}
 
+	render() {
+		const { ctx } = this.game
+
+		// Dibujar NPCs
+		this.npcs.forEach((npc) => npc.draw(ctx, this.camera))
+
+		this.game.player.draw(ctx, this.camera)
+
+		// Renderizar UI
+		this.uiManager.renderComponents(ctx)
+
+		// Renderizar diálogo activo
+		this.dialogManager.renderDialogBox()
+		this.dialogManager.renderOptionsBox()
+	}
+
+	checkNPCInteraction() {
+		const playerX = this.game.player.x + this.game.player.width / 2
+		const playerY = this.game.player.y + this.game.player.height / 2
+
+		for (const npc of this.npcs) {
+			// Verificar si el jugador está en zona de interaccion
 			let canTalk =
 				Math.abs(playerX - npc.x) < 50 && Math.abs(playerY - npc.y) < 50 // Jugador cerca del NPC
 
-			// Verificar si el jugador está frente al NPC
 			if (canTalk) {
 				if (this.keys['e'] && !this.keyPressed) {
 					this.keyPressed = true
-					if (!npc.isInteracting) {
-						npc.interact()
-					} else {
-						// si ya esta interaccionando al presionar
-						this.dialogManager.advanceDialogue()
-					}
+					// si esta inactivo, interactuar
+					if (!npc.isInteracting) npc.interact()
+					// si ya esta interaccionando avanzar conversacion
+					else this.dialogManager.advanceDialogue()
 				}
 			} else {
 				// Si el jugador se aleja, finalizar la interacción
-				if (npc.isInteracting) {
-					this.dialogManager.endDialogue()
-				}
+				if (npc.isInteracting) this.dialogManager.endDialogue()
 			}
 		}
-
+	}
+	handleNPCOptions() {
 		// Manejar entrada para selección de opciones
 		if (this.dialogManager.currentNPC) {
 			if (this.keys['w'] && !this.keyPressed) {
@@ -128,47 +148,10 @@ export class PuertoValerisScene {
 				this.dialogManager.selectOption(this.dialogManager.selectedOptionIndex)
 			}
 		}
-
-		if (
-			!this.keys['w'] &&
-			!this.keys['s'] &&
-			!this.keys['q'] &&
-			!this.keys['e']
-		) {
-			this.keyPressed = false
-		}
-	}
-
-	render() {
-		const { ctx } = this.game
-
-		// Dibujar NPCs
-		this.npcs.forEach((npc) => npc.draw(ctx, this.camera))
-
-		this.game.player.draw(ctx, this.camera)
-
-		// Renderizar UI
-		this.uiManager.renderComponents(ctx)
-
-		// Renderizar diálogo activo
-		if (this.dialogManager.currentNPC) {
-			const dialog =
-				this.dialogManager.currentNPC.dialogs[
-					this.dialogManager.currentMessageIndex
-				]
-			// console.log(dialog, typeof dialog)
-			if (typeof dialog === 'string') {
-				this.dialogManager.renderDialogBox(dialog)
-			} else if (dialog?.options) {
-				this.dialogManager.renderDialogBox(dialog.message)
-				this.dialogManager.renderOptionsBox(dialog.options)
-			}
-		}
 	}
 
 	/* Load/Unload */
 	onEnter() {
-		console.log('Entrando en la escena: Puerto Valeris')
 		// Configurar la cámara para seguir al jugador
 		if (this.game.player && this.camera.target !== this.game.player) {
 			this.camera.setTarget(this.game.player)
@@ -189,9 +172,7 @@ export class PuertoValerisScene {
 		}
 		this.uiManager.addComponent(this.map_button)
 	}
-	onExit() {
-		console.log('Saliendo de la escena: Puerto Valeris')
-	}
+	onExit() {}
 
 	/* Events */
 	handleClick(mouseX, mouseY, e) {

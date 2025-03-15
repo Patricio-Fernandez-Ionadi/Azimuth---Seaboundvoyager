@@ -20,13 +20,13 @@ export class NPC {
 		if (!this.isInteracting) {
 			this.isInteracting = true
 			// Emitir evento de inicio de interacción
-			this.eventSystem.emit('npcInteracted', { npc: this })
+			this.eventSystem.emit('npcInteracted', this)
 		}
 	}
 
 	endInteraction() {
 		this.isInteracting = false
 		// Emitir evento de fin de interacción
-		this.eventSystem.emit('interactionEnded', { npc: this })
+		this.eventSystem.emit('interactionEnded', this)
 	}
 }

@@ -1,0 +1,7 @@
+dev
+src/assets
+src/components/assets
+data
+src/scenes/creation/assets
+src/scenes/menu/assets
+src/scenes/world-map/assets

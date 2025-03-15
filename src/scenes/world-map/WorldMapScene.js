@@ -4,16 +4,18 @@ import { PopupManager } from './components/PopupManager.js'
 import { Button } from '../../components/Button.js'
 import { SCENES } from '../../core/constants.js'
 import { Camera } from '../../core/Camera.js'
-import { WorldMap } from './WorldMap.js'
+import { StaticImage } from '../../core/StaticImage.js'
+
+const MAP_IMG = './src/scenes/world-map/assets/world_map_pirates.png'
+const MAP_DATA = '/src/scenes/world-map/data/world_map_pirates.json'
 
 export class WorldMapScene {
 	constructor(game) {
 		this.game = game
 		this.uiManager = new UIManager(this.game)
 		this.mapManager = new MapManager(this.game)
-		this.mapManager.loadMap('/src/scenes/world-map/data/world_map_pirates.json')
-		this.map = new WorldMap(this.game)
-
+		this.mapManager.loadMap(MAP_DATA)
+		this.map = new StaticImage(MAP_IMG)
 		this.camera = new Camera(this)
 
 		this.popupManager = new PopupManager(this)
@@ -24,43 +26,13 @@ export class WorldMapScene {
 		})
 	}
 
-	onEnter() {
-		console.log('Entrando en la escena: World Map')
-		this.map_button = new Button(
-			this.game.width - 70,
-			this.game.height - 70,
-			50,
-			50,
-			'X',
-			20,
-			18,
-			32
-		)
-		this.map_button.onClick = () => {
-			this.game.sceneManager.changeScene(SCENES.city.valeris)
-		}
-		this.uiManager.addComponent(this.map_button)
-
-		// seteo de limites de camara
-		if (
-			this.camera.mapWidth !== this.map.width ||
-			this.camera.mapHeight !== this.map.height
-		) {
-			this.camera.setMapBounds(this.map.width, this.map.height)
-		}
-	}
-	onExit() {
-		console.log('Saliendo de la escena: World Map')
-	}
-
-	update(deltaTime) {}
+	update() {}
 
 	render() {
-		this.map.draw(this.camera)
+		this.map.draw(this.game.ctx, this.camera)
 		this.renderZones()
 		this.uiManager.renderComponents()
 	}
-
 	renderZones() {
 		const { ctx } = this.game
 		this.mapManager.zones.forEach((zone) => {
@@ -80,6 +52,36 @@ export class WorldMapScene {
 		})
 	}
 
+	/* Load/Unload */
+	onEnter() {
+		this.map_button = new Button(
+			this.game.width - 70,
+			this.game.height - 70,
+			50,
+			50,
+			'X',
+			20,
+			18,
+			32
+		)
+		this.map_button.onClick = () => {
+			this.game.sceneManager.changeScene(SCENES.city.valeris)
+		}
+		this.uiManager.addComponent(this.map_button)
+
+		// seteo de limites de camara
+		if (
+			this.map.loaded &&
+			(this.camera.mapWidth !== this.map.width ||
+				this.camera.mapHeight !== this.map.height)
+		) {
+			this.camera.setMapBounds(this.map.width, this.map.height)
+		}
+	}
+	onExit() {
+		this.popupManager.clearPopups()
+	}
+	/* Events */
 	handleClick(mouseX, mouseY, e) {
 		this.uiManager.handleClick(mouseX, mouseY, e)
 

@@ -1,3 +1,4 @@
+import { Keyboard } from './core/Keyboard.js'
 import { EventSystem } from './core/EventSystem.js'
 import { SceneManager } from './core/managers/SceneManager.js'
 
@@ -28,15 +29,13 @@ export class Game {
 
 		/* Pointer */
 		this.customCursor = new CustomCursor(this)
-
-		this.keys = {}
-
-		this.player = new Player(100, 100, this)
+		this.keyboard = new Keyboard()
 
 		/* Sistemas */
 		this.eventSystem = new EventSystem()
-
 		this.sceneManager = new SceneManager(this)
+
+		this.player = new Player(100, 100, this)
 
 		/* Escenas */
 		this.sceneManager.addScene(SCENES.menu, new MenuScene(this))
@@ -69,54 +68,50 @@ export class Game {
 		this.canvas.height = this.height
 	}
 	setupEvents() {
+		this.input = { mouseX: 0, mouseY: 0 }
 		this.canvas.addEventListener('click', (e) => this.handleClick(e))
 
 		/* Drag */
 		this.canvas.addEventListener('mousedown', (e) => this.mouseDown(e))
 		this.canvas.addEventListener('mouseup', (e) => this.mouseUp(e))
 		this.canvas.addEventListener('mousemove', (e) => this.mouseMove(e))
-
-		window.addEventListener('keydown', (e) => (this.keys[e.key] = true))
-		window.addEventListener('keyup', (e) => (this.keys[e.key] = false))
 	}
 
 	handleClick(e) {
+		const mouseX = e.offsetX
+		const mouseY = e.offsetY
 		const activeScene = this.sceneManager.activeScene
-		if (activeScene) {
-			const mouseX = e.offsetX
-			const mouseY = e.offsetY
-			activeScene.handleClick?.(mouseX, mouseY, e)
-		}
+		if (activeScene) activeScene.handleClick?.(mouseX, mouseY, e)
+		this.player.handleClick(mouseX, mouseY, e)
 	}
 	mouseDown(e) {
+		const mouseX = e.offsetX
+		const mouseY = e.offsetY
 		const activeScene = this.sceneManager.activeScene
-		if (activeScene) {
-			const mouseX = e.offsetX
-			const mouseY = e.offsetY
-			activeScene.mouseDown?.(mouseX, mouseY, e)
-		}
+		if (activeScene) activeScene.mouseDown?.(mouseX, mouseY, e)
 
+		this.player.mouseDown(mouseX, mouseY, e)
 		this.customCursor.setModel('left')
 	}
 	mouseUp(e) {
+		const mouseX = e.offsetX
+		const mouseY = e.offsetY
 		const activeScene = this.sceneManager.activeScene
-		if (activeScene) {
-			const mouseX = e.offsetX
-			const mouseY = e.offsetY
-			activeScene.mouseUp?.(mouseX, mouseY, e)
-		}
+		if (activeScene) activeScene.mouseUp?.(mouseX, mouseY, e)
 
+		this.player.mouseUp(mouseX, mouseY, e)
 		this.customCursor.setModel('right')
 	}
 	mouseMove(e) {
 		const mouseX = e.offsetX
 		const mouseY = e.offsetY
+		this.input.mouseX = e.offsetX
+		this.input.mouseY = e.offsetY
 		const activeScene = this.sceneManager.activeScene
-		if (activeScene) {
-			activeScene.mouseMove?.(mouseX, mouseY, e)
-		}
+		if (activeScene) activeScene.mouseMove?.(mouseX, mouseY, e)
 
-		this.customCursor.updatePosition(mouseX, mouseY)
+		this.player.mouseMove(mouseX, mouseY, e)
+		this.customCursor.updatePosition(mouseX, mouseY, e)
 	}
 
 	animate(deltatime) {

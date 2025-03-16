@@ -31,6 +31,38 @@ Array.prototype.createObjectsFrom2D = function (
 	return objects
 }
 
+// Collision
+export const checkCollisions = (ob1, ob2) => {
+	const box1 = ob1.hitbox ?? ob1
+	const box2 = ob2.hitbox ?? ob2
+
+	const isColliding =
+		box1.x <= box2.x + box2.width &&
+		box1.x + box1.width >= box2.x &&
+		box1.y <= box2.y + box2.height &&
+		box1.y + box1.height >= box2.y
+
+	if (!isColliding) return null
+
+	const xOverlap = Math.min(
+		box1.x + box1.width - box2.x,
+		box2.x + box2.width - box1.x
+	)
+	const yOverlap = Math.min(
+		box1.y + box1.height - box2.y,
+		box2.y + box2.height - box1.y
+	)
+
+	if (xOverlap < yOverlap) {
+		return box1.x < box2.x ? 'right' : 'left'
+	} else {
+		return box1.y < box2.y ? 'bottom' : 'top'
+	}
+}
+
+/* ASYNC */
+
+// animation
 export const fadeIn = (overlay, duration = 1000) => {
 	return new Promise((resolve) => {
 		const start = performance.now()
@@ -53,7 +85,6 @@ export const fadeIn = (overlay, duration = 1000) => {
 		requestAnimationFrame(animate)
 	})
 }
-
 export const fadeOut = (overlay, duration = 1000) => {
 	return new Promise((resolve) => {
 		const start = performance.now()
@@ -77,8 +108,19 @@ export const fadeOut = (overlay, duration = 1000) => {
 	})
 }
 
+// delayer
 export const waitFor = (time = 0, callback) => {
 	setTimeout(() => {
 		callback()
 	}, time)
+}
+
+// image
+export const loadImage = (src) => {
+	return new Promise((resolve, reject) => {
+		const img = new Image()
+		img.onload = () => resolve(img)
+		img.onerror = reject
+		img.src = src
+	})
 }

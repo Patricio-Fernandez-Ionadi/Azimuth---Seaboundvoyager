@@ -30,11 +30,8 @@ export class PopupManager {
 		const popup = new Popup(
 			x,
 			y,
-			popupWidth,
-			popupHeight,
 			'Información de la ciudad',
 			clickedZone,
-			1, // Prioridad alta,
 			this.scene.game
 		)
 		popup.addButton('Cerrar', () => {

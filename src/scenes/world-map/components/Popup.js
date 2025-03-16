@@ -1,17 +1,16 @@
 import { Button } from '../../../components/Button.js'
 
 export class Popup {
-	constructor(x, y, width, height, title, content, priority = 1, game) {
+	constructor(x, y, title, content, game) {
 		this.id = Date.now()
 		this.x = x
 		this.y = y
-		this.width = width
-		this.height = height
+		this.width = 300
+		this.height = 270
 		this.title = title
 		this.content = content
 		this.buttons = []
 		this.isOpen = true
-		this.priority = priority
 		this.game = game
 		this.background = new Image()
 		this.background.src = '/src/scenes/world-map/assets/Switch_0.png'

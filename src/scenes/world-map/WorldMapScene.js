@@ -104,6 +104,7 @@ export class WorldMapScene {
 			this.camera.handleDrag(mouseX, mouseY, e)
 		}
 		this.uiManager.mouseMove(mouseX, mouseY, e)
+		this.map_button.handleHover(mouseX, mouseY, e)
 	}
 	mouseUp(mouseX, mouseY, e) {
 		this.camera.mouseUp(mouseX, mouseY, e)

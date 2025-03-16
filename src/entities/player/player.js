@@ -1,7 +1,44 @@
+import { UIManager } from '../../core/managers/UIManager.js'
+
+import { Inventory } from './inventory/Inventory.js'
+import { Item } from '../../components/Item.js'
+
+const testItems = [
+	new Item(
+		1,
+		'Gold Key',
+		'Una llave unica, debe ser para algo valioso.',
+		'/src/components/assets/items/key_gold_item.png',
+		16
+	),
+	new Item(
+		2,
+		'Botella de Ron',
+		'Una sucia y vieja botella de ron.',
+		'/src/components/assets/items/rum_bottle_item.png',
+		16
+	),
+	new Item(
+		3,
+		'Fragmento de mapa',
+		'Faltan partes para poder entenderlo.',
+		'/src/components/assets/items/map_fragment_item.png',
+		16
+	),
+	new Item(
+		4,
+		'Mapa de la region',
+		'Contiene informacion valiosa de la zona.',
+		'/src/components/assets/items/map_item.png',
+		16
+	),
+]
+
 export class Player {
 	constructor(x, y, game) {
 		this.game = game
 		this.eventSystem = this.game.eventSystem
+		this.uiManager = new UIManager(this.game)
 		this.x = x
 		this.y = y
 		this.width = 32
@@ -9,14 +46,19 @@ export class Player {
 		this.color = 'red'
 
 		/* Fisicas */
-		this.speed = 3 // Velocidad de movimiento
-		this.velocity = {
-			x: 0,
-			y: 0,
-		}
+		this.speed = 3
+		this.velocity = { x: 0, y: 0 }
 		this.colliding = null
 
 		/* Gameplay */
+		// this.health = 100
+		// this.hunger = 0
+		// this.drunk = 0
+
+		// Inventario
+		this.inventory = new Inventory(this)
+		this.isInventoryOpen = false
+
 		this.reputation = {
 			pirates: 0,
 			merchants: 0,
@@ -33,14 +75,21 @@ export class Player {
 			survival: 1,
 		}
 
+		this.uiManager.addComponent(this.inventory)
+
 		this.init()
 	}
 
 	update() {
-		this.handleInteraction()
 		this.updateInputs()
 		this.horizontalMovement()
 		this.verticalMovemet()
+
+		// Abrir/Cerrar inventario
+		if (this.game.keyboard.onPress.tab && !this.keyPressed) {
+			this.keyPressed = true
+			this.inventory.isOpen = !this.inventory.isOpen
+		}
 
 		this.y += this.velocity.y
 		this.x += this.velocity.x
@@ -49,8 +98,11 @@ export class Player {
 	draw(ctx, camera) {
 		ctx.fillStyle = this.color
 		ctx.fillRect(this.x - camera.x, this.y - camera.y, this.width, this.height)
+
+		this.uiManager.renderComponents()
 	}
 
+	/* Movement */
 	horizontalMovement() {
 		const moveLeft = this.direction.left && !this.interactionRequired
 		const moveRight = this.direction.right && !this.interactionRequired
@@ -63,7 +115,6 @@ export class Player {
 			this.velocity.x = 0
 		}
 	}
-
 	verticalMovemet() {
 		const moveUp = this.direction.up && !this.interactionRequired
 		const moveBot = this.direction.bottom && !this.interactionRequired
@@ -77,21 +128,44 @@ export class Player {
 		}
 	}
 
-	updateInputs() {
-		this.direction = {
-			left: this.game.keys?.['ArrowLeft'] || this.game.keys?.['a'],
-			right: this.game.keys?.['ArrowRight'] || this.game.keys?.['d'],
-			up: this.game.keys?.['ArrowUp'] || this.game.keys?.['w'],
-			bottom: this.game.keys?.['ArrowDown'] || this.game.keys?.['s'],
-		}
+	/* Events */
+	mouseUp(mouseX, mouseY, e) {
+		this.uiManager.mouseUp(mouseX, mouseY, e)
+	}
+	mouseDown(mouseX, mouseY, e) {
+		this.uiManager.mouseDown(mouseX, mouseY, e)
 	}
 
-	handleInteraction() {
+	mouseMove(mouseX, mouseY, e) {
+		this.uiManager.mouseMove(mouseX, mouseY, e)
+	}
+	handleClick(mouseX, mouseY, e) {
+		this.uiManager.handleClick(mouseX, mouseY, e)
+	}
+	updateInputs() {
+		this.direction = {
+			left: this.game.keyboard.onPress.a,
+			right: this.game.keyboard.onPress.d,
+			up: this.game.keyboard.onPress.w,
+			bottom: this.game.keyboard.onPress.s,
+		}
+		if (!this.game.keyboard.onPress.tab) {
+			this.keyPressed = false
+		}
 		this.interactionRequired =
 			!!this.game.sceneManager?.activeScene?.dialogManager.currentOptions
 	}
 
+	/* Load */
 	init() {
+		// TEST inventario
+		testItems.forEach((item, index) => {
+			this.inventory.addItem(
+				item,
+				Math.floor(Math.random() * item.maxStack) + 1
+			)
+		})
+
 		this.eventSystem.on('stopPlayerMotion', ({ side, object }) => {
 			if (side) {
 				// left

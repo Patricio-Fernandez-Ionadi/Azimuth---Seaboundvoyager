@@ -63,7 +63,7 @@ export const checkCollisions = (ob1, ob2) => {
 /* ASYNC */
 
 // animation
-export const fadeIn = (overlay, duration = 1000) => {
+export const fadeOut = (overlay, duration = 1000) => {
 	return new Promise((resolve) => {
 		const start = performance.now()
 		const initialOpacity = overlay.opacity || 0
@@ -85,7 +85,7 @@ export const fadeIn = (overlay, duration = 1000) => {
 		requestAnimationFrame(animate)
 	})
 }
-export const fadeOut = (overlay, duration = 1000) => {
+export const fadeIn = (overlay, duration = 1000) => {
 	return new Promise((resolve) => {
 		const start = performance.now()
 		const initialOpacity = overlay.opacity || 1

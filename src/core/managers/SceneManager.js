@@ -13,24 +13,14 @@ export class SceneManager {
 	}
 
 	async changeScene(name, transition = true) {
-		if (this.activeScene && transition) {
-			// Realizar fadeOut antes de cambiar de escena
-			await fadeIn(this.overlay)
-		}
+		if (this.activeScene && transition) await fadeOut(this.overlay)
 
 		// Cambiar a la nueva escena
-		if (this.activeScene) {
-			this.activeScene.onExit?.()
-		}
-		this.activeScene = this.scenes[name]
-		if (this.activeScene) {
-			this.activeScene.onEnter?.()
-		}
+		if (this.activeScene) this.activeScene.onExit?.()
 
-		if (transition) {
-			// Realizar fadeIn después de cambiar de escena
-			await fadeOut(this.overlay)
-		}
+		this.activeScene = this.scenes[name]
+		if (this.activeScene) this.activeScene.onEnter?.()
+		if (transition) await fadeIn(this.overlay)
 	}
 
 	update(deltaTime) {
@@ -41,17 +31,8 @@ export class SceneManager {
 
 	render() {
 		const { ctx } = this.game
-
-		if (this.activeScene) {
-			this.activeScene.render()
-		}
-
-		// Renderizar el overlay
-		ctx.save()
-		ctx.globalAlpha = this.overlay.opacity
-		ctx.fillStyle = 'rgba(0, 0, 0, 1)'
-		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-		ctx.restore()
+		if (this.activeScene) this.activeScene.render()
+		this.renderTransitionsOverlay(ctx)
 	}
 
 	setBackground(image) {
@@ -61,6 +42,14 @@ export class SceneManager {
 			0, 0, image.width, image.height,
 			0, 0, this.game.canvas.width, this.game.canvas.height
 		)
+	}
+
+	renderTransitionsOverlay(ctx) {
+		ctx.save()
+		ctx.globalAlpha = this.overlay.opacity
+		ctx.fillStyle = 'rgba(0, 0, 0, 1)'
+		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+		ctx.restore()
 	}
 
 	// handleZoom(e) {

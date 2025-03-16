@@ -26,12 +26,12 @@ export class UIManager {
 		})
 	}
 
-	mouseDown() {
+	mouseDown(mouseX, mouseY, e) {
 		this.components.forEach((component) => {
 			if (component.mouseDown) component.mouseDown(mouseX, mouseY, e)
 		})
 	}
-	mouseUp() {
+	mouseUp(mouseX, mouseY, e) {
 		this.components.forEach((component) => {
 			if (component.mouseUp) component.mouseUp(mouseX, mouseY, e)
 		})

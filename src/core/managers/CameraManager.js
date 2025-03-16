@@ -1,4 +1,4 @@
-export class Camera {
+export class CameraManager {
 	constructor(game) {
 		this.game = game
 		this.x = 0

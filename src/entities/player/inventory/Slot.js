@@ -1,5 +1,8 @@
 import { loadImage } from '../../../core/utils.js'
 
+const BG_IMG = '/src/entities/player/inventory/assets/slot.png'
+const BG_HOVER_IMG = '/src/entities/player/inventory/assets/slot_hovered.png'
+
 export class Slot {
 	constructor(x, y, size) {
 		this.x = x
@@ -10,22 +13,18 @@ export class Slot {
 		this.quantity = 0 // Cantidad del ítem
 		this.isHovered = false // Estado de hover
 
-		/* Images */
-		this.loaded = { bg: false, bg_hover: false }
-		loadImage('/src/entities/player/inventory/assets/slot.png').then((res) => {
-			this.bgImg = res
+		this.loaded = {}
+		loadImage(BG_IMG).then((res) => {
+			this.bg = res
 			this.loaded.bg = true
 		})
-		loadImage('/src/entities/player/inventory/assets/slot_hovered.png').then(
-			(res) => {
-				this.bg_hoverImg = res
-				this.loaded.bg_hover = true
-			}
-		)
+		loadImage(BG_HOVER_IMG).then((res) => {
+			this.bg_hover = res
+			this.loaded.bg_hover = true
+		})
 	}
 
 	addItem(item, quantity = 1) {
-		console.log('add item')
 		if (!this.item) {
 			this.item = item
 			this.quantity = quantity
@@ -49,16 +48,23 @@ export class Slot {
 	}
 
 	draw(ctx) {
+		const img = this.isHovered ? this.bg_hover : this.bg
 		ctx.drawImage(
-			this.isHovered ? this.bg_hoverImg : this.bgImg,
+			img,
+			0,
+			0,
+			img.width,
+			img.height,
 			this.x,
-			this.y
+			this.y,
+			this.width,
+			this.height
 		)
 
-		// Dibujar el ítem si existe
 		if (this.item) {
 			if (this.item.draw) {
 				this.item.draw(ctx, this.x + 5, this.y + 5, this.width - 10)
+
 				// Mostrar la cantidad del ítem
 				ctx.fillStyle = 'lightgreen'
 				ctx.font = '14px Arial'

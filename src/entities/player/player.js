@@ -1,22 +1,43 @@
 export class Player {
 	constructor(x, y, game) {
 		this.game = game
+		this.eventSystem = this.game.eventSystem
 		this.x = x
 		this.y = y
 		this.width = 32
 		this.height = 32
 		this.color = 'red'
+
+		/* Fisicas */
 		this.speed = 3 // Velocidad de movimiento
 		this.velocity = {
 			x: 0,
 			y: 0,
 		}
+		this.colliding = null
 
-		this.interactionRequired =
-			!!this.game.sceneManager?.activeScene?.dialogManager.currentOptions
+		/* Gameplay */
+		this.reputation = {
+			pirates: 0,
+			merchants: 0,
+			explorers: 0,
+		}
+		this.resources = {
+			food: 10,
+			wood: 5,
+			gold: 0,
+		}
+		this.skills = {
+			navigation: 1,
+			negotiation: 1,
+			survival: 1,
+		}
+
+		this.init()
 	}
 
 	update() {
+		this.handleInteraction()
 		this.updateInputs()
 		this.horizontalMovement()
 		this.verticalMovemet()
@@ -63,5 +84,44 @@ export class Player {
 			up: this.game.keys?.['ArrowUp'] || this.game.keys?.['w'],
 			bottom: this.game.keys?.['ArrowDown'] || this.game.keys?.['s'],
 		}
+	}
+
+	handleInteraction() {
+		this.interactionRequired =
+			!!this.game.sceneManager?.activeScene?.dialogManager.currentOptions
+	}
+
+	init() {
+		this.eventSystem.on('stopPlayerMotion', ({ side, object }) => {
+			if (side) {
+				// left
+				if (this.velocity.x < 0 && side === 'left') {
+					// detener movimiento horizontal <-
+					this.velocity.x = 0
+					this.x = object.x + object.width
+				}
+
+				// right
+				if (this.velocity.x > 0 && side === 'right') {
+					// detener movimiento horizontal ->
+					this.velocity.x = 0
+					this.x = object.x - this.width
+				}
+
+				// top
+				if (this.velocity.y < 0 && side === 'top') {
+					// detener movimiento horizontal <-
+					this.velocity.y = 0
+					this.y = object.y + object.height
+				}
+
+				// bottom
+				if (this.velocity.y > 0 && side === 'bottom') {
+					// detener movimiento horizontal ->
+					this.velocity.y = 0
+					this.y = object.y - this.height
+				}
+			}
+		})
 	}
 }

@@ -21,39 +21,42 @@ export class UIManager {
 	}
 
 	handleClick(mouseX, mouseY, e) {
-		// Convertir los componentes a un array ordenado por prioridad
-		const sortedComponents = Array.from(this.components.values()).sort(
-			(a, b) => b.priority - a.priority
-		)
-		for (const component of sortedComponents) {
-			if (component.isPointInside(mouseX, mouseY)) {
-				component.handleClick(mouseX, mouseY, e)
-				return true // Detener la propagación
-			}
-		}
-		return false
+		this.components.forEach((component) => {
+			if (component.handleClick) component.handleClick(mouseX, mouseY, e)
+		})
 	}
 
-	mouseDown() {}
-	mouseUp() {}
+	mouseDown() {
+		this.components.forEach((component) => {
+			if (component.mouseDown) component.mouseDown(mouseX, mouseY, e)
+		})
+	}
+	mouseUp() {
+		this.components.forEach((component) => {
+			if (component.mouseUp) component.mouseUp(mouseX, mouseY, e)
+		})
+	}
 
 	mouseMove(mouseX, mouseY, e) {
-		const sortedComponents = Array.from(this.components.values()).sort(
-			(a, b) => b.priority - a.priority
-		)
-
-		for (const component of sortedComponents) {
-			if (component.mouseMove && component.isOpen) {
-				if (component.mouseMove(mouseX, mouseY, e)) {
-					return true
-				}
-			}
-		}
-		return false
+		this.components.forEach((component) => {
+			if (component.mouseMove) component.mouseMove(mouseX, mouseY, e)
+		})
 	}
 
 	renderComponents() {
 		const { ctx } = this.game
-		this.components.forEach((component) => component.draw(ctx))
+		this.components.forEach((component) => {
+			/* para componentes con propiedad isOpen, chequear si debe ser renderizado segun su flag */
+			if (typeof component.isOpen !== 'undefined') {
+				if (component.isOpen) {
+					component.draw(ctx)
+				}
+			}
+
+			/* componentes sin flag isOpen renderizar siempre */
+			if (typeof component.isOpen === 'undefined') {
+				component.draw(ctx)
+			}
+		})
 	}
 }

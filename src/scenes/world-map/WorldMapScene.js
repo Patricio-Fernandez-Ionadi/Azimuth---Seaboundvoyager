@@ -3,7 +3,7 @@ import { MapManager } from '../../core/managers/MapManager.js'
 import { PopupManager } from './components/PopupManager.js'
 import { Button } from '../../components/Button.js'
 import { SCENES } from '../../core/constants.js'
-import { Camera } from '../../core/Camera.js'
+import { CameraManager } from '../../core/managers/CameraManager.js'
 import { StaticImage } from '../../core/StaticImage.js'
 
 const MAP_IMG = './src/scenes/world-map/assets/world_map_pirates.png'
@@ -16,8 +16,7 @@ export class WorldMapScene {
 		this.mapManager = new MapManager(this.game)
 		this.mapManager.loadMap(MAP_DATA)
 		this.map = new StaticImage(MAP_IMG)
-		this.camera = new Camera(this)
-
+		this.camera = new CameraManager(this)
 		this.popupManager = new PopupManager(this)
 
 		/* Eventos */

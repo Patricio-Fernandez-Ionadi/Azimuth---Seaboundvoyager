@@ -1,3 +1,7 @@
+import { loadImage } from '../core/utils.js'
+
+const BG_IMG = '/src/components/assets/Bar_0.png'
+const BG_HOVER_IMG = '/src/components/assets/Bar_1.png'
 export class Button {
 	constructor(x, y, width, height, label, fz = 24, lx = 0, ly = 0) {
 		this.x = x
@@ -10,11 +14,15 @@ export class Button {
 		this.fontSize = fz
 		this.isHovered = false
 
-		// Cargar imágenes para los botones
-		this.bar0Img = new Image()
-		this.bar0Img.src = '/src/components/assets/Bar_0.png'
-		this.bar1Img = new Image()
-		this.bar1Img.src = '/src/components/assets/Bar_1.png'
+		this.loaded = {}
+		loadImage(BG_IMG).then((res) => {
+			this.bg = res
+			this.loaded = { ...this.loaded, bg: true }
+		})
+		loadImage(BG_HOVER_IMG).then((res) => {
+			this.bg_hover = res
+			this.loaded = { ...this.loaded, bg_hover: true }
+		})
 	}
 
 	isPointInside(mouseX, mouseY) {
@@ -42,10 +50,10 @@ export class Button {
 	}
 
 	draw(ctx) {
-		ctx.save()
+		if (!this.loaded.bg && !this.loaded.bg_hover) return
 
-		// Dibujar la imagen del botón según si está siendo hovereado
-		const img = this.isHovered ? this.bar1Img : this.bar0Img
+		ctx.save()
+		const img = this.isHovered ? this.bg_hover : this.bg
 
 		ctx.drawImage(
 			img,
@@ -63,7 +71,6 @@ export class Button {
 		ctx.fillStyle = this.isHovered ? 'white' : '#aaa'
 		ctx.font = `${this.fontSize}px Arial`
 		ctx.fillText(this.label, this.x + this.labelX, this.y + this.labelY)
-
 		ctx.restore()
 	}
 }

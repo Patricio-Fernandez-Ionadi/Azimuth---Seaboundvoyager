@@ -44,7 +44,7 @@ export class CustomCursor {
 			sy,
 			sw,
 			sh, // Fuente (recorte de la imagen)
-			this.position.x - 5,
+			this.position.x - 2,
 			this.position.y, // Destino (posición en el canvas)
 			30,
 			30 // Escala

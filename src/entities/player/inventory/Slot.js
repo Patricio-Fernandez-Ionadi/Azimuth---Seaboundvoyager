@@ -24,29 +24,6 @@ export class Slot {
 		})
 	}
 
-	addItem(item, quantity = 1) {
-		if (!this.item) {
-			this.item = item
-			this.quantity = quantity
-		} else if (this.item.id === item.id) {
-			this.quantity += quantity
-		} else {
-			console.warn('El slot ya contiene un ítem diferente')
-		}
-	}
-
-	removeItem(quantity = 1) {
-		if (this.item && this.quantity >= quantity) {
-			this.quantity -= quantity
-			if (this.quantity <= 0) {
-				this.item = null
-				this.quantity = 0
-			}
-		} else {
-			console.warn('No hay suficiente cantidad para eliminar')
-		}
-	}
-
 	draw(ctx) {
 		const img = this.isHovered ? this.bg_hover : this.bg
 		ctx.drawImage(
@@ -72,7 +49,7 @@ export class Slot {
 			}
 		}
 	}
-
+	/* ###### Events ###### */
 	mouseMove(mouseX, mouseY, e) {
 		this.isHovered =
 			mouseX >= this.x &&
@@ -81,7 +58,6 @@ export class Slot {
 			mouseY <= this.y + this.height
 		return this.isHovered
 	}
-
 	handleClick(mouseX, mouseY) {
 		return (
 			mouseX >= this.x &&
@@ -89,5 +65,29 @@ export class Slot {
 			mouseY >= this.y &&
 			mouseY <= this.y + this.height
 		)
+	}
+	/* #################### */
+
+	addItem(item, quantity = 1) {
+		if (!this.item) {
+			this.item = item
+			this.quantity = quantity
+		} else if (this.item.id === item.id) {
+			this.quantity += quantity
+		} else {
+			console.warn('El slot ya contiene un ítem diferente')
+		}
+	}
+
+	removeItem(quantity = 1) {
+		if (this.item && this.quantity >= quantity) {
+			this.quantity -= quantity
+			if (this.quantity <= 0) {
+				this.item = null
+				this.quantity = 0
+			}
+		} else {
+			console.warn('No hay suficiente cantidad para eliminar')
+		}
 	}
 }

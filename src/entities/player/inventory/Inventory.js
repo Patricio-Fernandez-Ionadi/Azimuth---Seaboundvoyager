@@ -17,14 +17,45 @@ export class Inventory {
 
 		this.init()
 	}
+	init() {
+		this.#createGrid()
+	}
 
 	draw(ctx) {
+		this.renderSlots(ctx)
+	}
+
+	/* ###### Events ###### */
+	mouseDown(mouseX, mouseY) {
+		this.pickItem(mouseX, mouseY)
+	}
+	mouseMove(mouseX, mouseY, e) {
+		if (!this.isOpen) return
+		this.hoverSlot(mouseX, mouseY)
+	}
+	mouseUp(mouseX, mouseY) {
+		if (this.draggedItem) this.dropItem(mouseX, mouseY)
+	}
+	/* #################### */
+
+	#createGrid() {
+		// Crear la cuadrícula de slots
+		this.slots = []
+		for (let row = 0; row < this.rows; row++) {
+			this.slots[row] = []
+			for (let col = 0; col < this.cols; col++) {
+				const x = this.x + col * this.slotSize
+				const y = this.y + row * this.slotSize
+				this.slots[row][col] = new Slot(x, y, this.slotSize)
+			}
+		}
+	}
+	renderSlots(ctx) {
 		for (let row = 0; row < this.rows; row++) {
 			for (let col = 0; col < this.cols; col++) {
 				this.slots[row][col].draw(ctx)
 			}
 		}
-
 		// Dibujar tooltip si hay un slot con hover
 		if (this.hoveredSlot && this.hoveredSlot.item) {
 			this.drawTooltip(ctx, this.hoveredSlot.item)
@@ -50,40 +81,38 @@ export class Inventory {
 		console.warn('Inventario lleno')
 		return false
 	}
-
-	drawTooltip(ctx, item) {
-		const padding = 10
-		const margin = 20
-		const textSpacing = 20
-		const x = this.hoveredSlot.x + this.slotSize + margin
-		const y = this.hoveredSlot.y
-
-		// Fondo del tooltip
-		ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-		ctx.fillRect(x, y, 200, 60)
-
-		// Texto del tooltip
-		ctx.fillStyle = 'white'
-		ctx.font = '14px Arial'
-		ctx.fillText(item.name, x + padding, y + padding + 15)
-		ctx.fillText(item.description, x + padding, y + padding + 15 + textSpacing)
-	}
-
-	init() {
-		// Crear la cuadrícula de slots
-		this.slots = []
+	dropItem(mouseX, mouseY) {
+		let placed = false // Inicializamos la variable
 		for (let row = 0; row < this.rows; row++) {
-			this.slots[row] = []
 			for (let col = 0; col < this.cols; col++) {
-				const x = this.x + col * this.slotSize
-				const y = this.y + row * this.slotSize
-				this.slots[row][col] = new Slot(x, y, this.slotSize)
+				const slot = this.slots[row][col]
+				if (slot.handleClick(mouseX, mouseY)) {
+					// Intentar colocar el ítem en el slot
+					if (!slot.item || slot.item.id === this.draggedItem.id) {
+						slot.addItem(this.draggedItem, this.draggedQuantity)
+						placed = true
+						break
+					}
+				}
 			}
 		}
+		if (!placed) {
+			if (this.x > mouseX) {
+				console.log('Ítem eliminado: se soltó fuera del inventario')
+				// No devolver el ítem al slot original ni hacer nada más
+			} else {
+				// Si no se soltó fuera, devolverlo al slot original
+				if (this.draggedFromSlot) {
+					this.draggedFromSlot.addItem(this.draggedItem, this.draggedQuantity)
+				}
+			}
+		}
+		// Limpiar el estado de drag and drop
+		this.draggedItem = null
+		this.draggedFromSlot = null
+		this.draggedQuantity = 0
 	}
-
-	/* Events */
-	mouseDown(mouseX, mouseY) {
+	pickItem(mouseX, mouseY) {
 		for (let row = 0; row < this.rows; row++) {
 			for (let col = 0; col < this.cols; col++) {
 				const slot = this.slots[row][col]
@@ -100,9 +129,7 @@ export class Inventory {
 			}
 		}
 	}
-
-	mouseMove(mouseX, mouseY, e) {
-		if (!this.isOpen) return
+	hoverSlot(mouseX, mouseY) {
 		let hovered = false
 		for (let row = 0; row < this.rows; row++) {
 			for (let col = 0; col < this.cols; col++) {
@@ -115,39 +142,21 @@ export class Inventory {
 		}
 		if (!hovered) this.hoveredSlot = null
 	}
+	drawTooltip(ctx, item) {
+		const padding = 10
+		const margin = 20
+		const textSpacing = 20
+		const x = this.hoveredSlot.x + this.slotSize + margin
+		const y = this.hoveredSlot.y
 
-	mouseUp(mouseX, mouseY) {
-		if (this.draggedItem) {
-			let placed = false // Inicializamos la variable
-			for (let row = 0; row < this.rows; row++) {
-				for (let col = 0; col < this.cols; col++) {
-					const slot = this.slots[row][col]
-					if (slot.handleClick(mouseX, mouseY)) {
-						// Intentar colocar el ítem en el slot
-						if (!slot.item || slot.item.id === this.draggedItem.id) {
-							slot.addItem(this.draggedItem, this.draggedQuantity)
-							placed = true
-							break
-						}
-					}
-				}
-			}
-			if (!placed) {
-				if (this.x > mouseX) {
-					console.log('Ítem eliminado: se soltó fuera del inventario')
-					// No devolver el ítem al slot original ni hacer nada más
-				} else {
-					// Si no se soltó fuera, devolverlo al slot original
-					if (this.draggedFromSlot) {
-						this.draggedFromSlot.addItem(this.draggedItem, this.draggedQuantity)
-					}
-				}
-			}
+		// Fondo del tooltip
+		ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
+		ctx.fillRect(x, y, 200, 60)
 
-			// Limpiar el estado de drag and drop
-			this.draggedItem = null
-			this.draggedFromSlot = null
-			this.draggedQuantity = 0
-		}
+		// Texto del tooltip
+		ctx.fillStyle = 'white'
+		ctx.font = '14px Arial'
+		ctx.fillText(item.name, x + padding, y + padding + 15)
+		ctx.fillText(item.description, x + padding, y + padding + 15 + textSpacing)
 	}
 }

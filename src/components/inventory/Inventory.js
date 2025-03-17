@@ -1,14 +1,14 @@
-import { Player } from '../../entities/player/player.js'
+import { Player } from '../../entities/player.js'
 import { Slot } from './Slot.js'
 
 export class Inventory {
-	constructor(owner, x, y, isNPC = true) {
+	constructor(owner, x, y, isNPC = true, rows, cols) {
 		this.owner = owner
 		this.x = x
 		this.y = y
-		this.rows = 16
-		this.cols = 12
-		this.slotSize = 26
+		this.rows = rows || 8
+		this.cols = cols || 8
+		this.slotSize = 40
 		this.hoveredSlot = null // Slot en hover
 		this.isOpen = false
 		this.width = this.rows * this.slotSize

@@ -1,5 +1,5 @@
-import { Inventory } from '../../components/inventory/Inventory.js'
-import { Item } from '../../components/Item.js'
+import { Inventory } from '../components/inventory/Inventory.js'
+import { Item } from '../components/Item.js'
 
 const testItems = [
 	new Item(
@@ -53,7 +53,7 @@ export class Player {
 		// this.drunk = 0
 
 		// Inventario
-		this.inventory = new Inventory(this, 450, 5, false)
+		this.inventory = new Inventory(this, 435, 20, false, 10)
 
 		this.reputation = {
 			pirates: 0,

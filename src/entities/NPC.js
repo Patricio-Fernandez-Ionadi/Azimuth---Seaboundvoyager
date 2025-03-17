@@ -1,4 +1,4 @@
-import { Inventory } from '../../components/inventory/Inventory.js'
+import { Inventory } from '../components/inventory/Inventory.js'
 
 export class NPC {
 	constructor(x, y, color, dialogs = [], inventory = [], game) {
@@ -11,7 +11,7 @@ export class NPC {
 		this.dialogs = dialogs // Array de mensajes
 
 		this.isInteracting = false
-		this.inventory = new Inventory(this, 10, 5)
+		this.inventory = new Inventory(this, 10, 50)
 
 		if (inventory.length > 0) {
 			inventory.forEach((item) => {

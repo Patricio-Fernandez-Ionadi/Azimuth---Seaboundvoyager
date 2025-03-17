@@ -178,19 +178,16 @@ export class PuertoValerisScene {
 		this.game.player.draw(ctx, this.camera)
 
 		// mostrar boton de mapa cuando el inventario esta cerrado
-		if (!this.game.player.inventory.isOpen) {
-			this.map_button.draw(ctx)
-		}
+		if (!this.game.player.inventory.isOpen) this.map_button.draw(ctx)
 
 		// Renderizar diálogo activo
 		this.dialogManager.renderDialogBox()
 		this.dialogManager.renderOptionsBox()
 
-		if (this.tradeWindow && this.game.player.inventory.tradeMode) {
+		/* Interface / Emergent */
+		if (this.tradeWindow && this.game.player.inventory.tradeMode)
 			this.tradeWindow.draw(ctx)
-		} else {
-			this.renderLevelInterface(ctx)
-		}
+		else this.game.renderLevelInterface()
 	}
 
 	checkNPCInteraction() {
@@ -242,12 +239,6 @@ export class PuertoValerisScene {
 				this.dialogManager.selectOption(this.dialogManager.selectedOptionIndex)
 			}
 		}
-	}
-
-	renderLevelInterface(ctx) {
-		ctx.fillStyle = 'white'
-		ctx.font = '14px Arial'
-		ctx.fillText(`Oro: ${this.game.player.resources.gold}`, 10, 20)
 	}
 
 	/* Load/Unload */

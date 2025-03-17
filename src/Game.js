@@ -4,6 +4,7 @@ import { SceneManager } from './core/managers/SceneManager.js'
 
 import { CustomCursor } from './components/CustomCursor.js'
 import { Player } from './entities/player/player.js'
+import { GameClock } from './components/GameClock.js'
 
 import { SCENES } from './core/constants.js'
 import { MenuScene } from './scenes/menu/MenuScene.js'
@@ -33,6 +34,8 @@ export class Game {
 		/* Sistemas */
 		this.eventSystem = new EventSystem()
 		this.sceneManager = new SceneManager(this)
+		this.clock = new GameClock(this)
+		this.lastFrameTime = Date.now()
 
 		this.player = new Player(100, 100, this)
 
@@ -46,10 +49,10 @@ export class Game {
 			new PuertoValerisScene(this)
 		)
 		// Establecer escena inicial
-		this.sceneManager.changeScene(SCENES.menu, false)
+		// this.sceneManager.changeScene(SCENES.menu, false)
 		// this.sceneManager.changeScene(SCENES.creation)
 		// this.sceneManager.changeScene(SCENES.map)
-		// this.sceneManager.changeScene(SCENES.city.valeris)
+		this.sceneManager.changeScene(SCENES.city.valeris)
 
 		/* Estados */
 		this.interactionState = {
@@ -61,6 +64,25 @@ export class Game {
 		this.animate()
 	}
 
+	/* Main Loop */
+	animate(deltatime) {
+		const currentTime = Date.now()
+		const deltaTime = currentTime - this.lastFrameTime
+		this.lastFrameTime = currentTime
+		this.clock.update(deltaTime) // Actualizar el reloj del juego
+		// console.log(this.clock)
+
+		this.ctx.clearRect(0, 0, this.width, this.height)
+		this.sceneManager.update(deltatime)
+
+		// Renderizados
+		this.sceneManager.render()
+		this.customCursor.draw(this.ctx)
+
+		requestAnimationFrame(() => this.animate())
+	}
+
+	/* Set Up */
 	setupCanvas() {
 		this.canvas.style.backgroundColor = '#222'
 		this.canvas.width = this.width
@@ -76,6 +98,7 @@ export class Game {
 		this.canvas.addEventListener('mousemove', (e) => this.mouseMove(e))
 	}
 
+	/* Events */
 	handleClick(e) {
 		const mouseX = e.offsetX
 		const mouseY = e.offsetY
@@ -113,14 +136,12 @@ export class Game {
 		this.customCursor.updatePosition(mouseX, mouseY, e)
 	}
 
-	animate(deltatime) {
-		this.ctx.clearRect(0, 0, this.width, this.height)
-		this.sceneManager.update(deltatime)
+	/* Others */
+	renderLevelInterface() {
+		this.ctx.fillStyle = 'white'
+		this.ctx.font = '14px Arial'
 
-		// Renderizados
-		this.sceneManager.render()
-		this.customCursor.draw(this.ctx)
-
-		requestAnimationFrame(() => this.animate())
+		this.ctx.fillText(this.clock.getTime(), 70, 20)
+		this.ctx.fillText(`Oro: ${this.player.resources.gold}`, 10, 20)
 	}
 }

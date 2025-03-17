@@ -1,7 +1,7 @@
 import { CameraManager } from '../../core/managers/CameraManager.js'
 import { DialogManager } from '../../core/managers/DialogManager.js'
 
-import { NPC } from '../../entities/npcs/NPC.js'
+import { NPC } from '../../entities/NPC.js'
 import { Button } from '../../components/Button.js'
 import { TradeWindow } from '../../components/TradeWindow.js'
 

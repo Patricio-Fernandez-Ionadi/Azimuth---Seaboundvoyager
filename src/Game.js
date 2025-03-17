@@ -1,16 +1,15 @@
-import { Keyboard } from './core/Keyboard.js'
-import { EventSystem } from './core/EventSystem.js'
+import { Keyboard } from './core/events/Keyboard.js'
+import { EventSystem } from './core/events/EventSystem.js'
 import { SceneManager } from './core/managers/SceneManager.js'
 
+import { CustomCursor } from './components/CustomCursor.js'
+import { Player } from './entities/player/player.js'
+
+import { SCENES } from './core/constants.js'
 import { MenuScene } from './scenes/menu/MenuScene.js'
 import { NewGameScene } from './scenes/creation/NewGameScene.js'
 import { WorldMapScene } from './scenes/world-map/WorldMapScene.js'
-
-import { CustomCursor } from './components/CustomCursor.js'
-
-import { Player } from './entities/player/player.js'
 import { PuertoValerisScene } from './scenes/cities/PuertoValeris.js'
-import { SCENES } from './core/constants.js'
 
 export class Game {
 	constructor() {

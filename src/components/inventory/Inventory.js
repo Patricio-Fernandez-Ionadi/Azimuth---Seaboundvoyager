@@ -1,4 +1,5 @@
 import { Player } from '../../entities/player.js'
+import { Text } from '../Text.js'
 import { Slot } from './Slot.js'
 
 export class Inventory {
@@ -99,26 +100,29 @@ export class Inventory {
 		}
 	}
 	drawTooltip(ctx, item) {
+		const width = 200
+		const height = 75
 		const padding = 10
 		const margin = 20
-		const textSpacing = 20
-		const x = this.hoveredSlot.x + this.slotSize + margin
-		const y = this.hoveredSlot.y
+		const tooltipX = this.hoveredSlot.x /* + this.slotSize + margin */
+		const tooltipY = this.hoveredSlot.y + this.slotSize + margin
 
 		// Fondo del tooltip
 		ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-		ctx.fillRect(x, y, 200, 75)
+		ctx.fillRect(tooltipX, tooltipY, width, height)
 
-		// Texto del tooltip
-		ctx.fillStyle = 'white'
-		ctx.font = '14px Arial'
-		ctx.fillText(item.name, x + padding, y + padding + 15)
-		ctx.fillText(item.description, x + padding, y + padding + 15 + textSpacing)
-		ctx.fillText(
-			'Precio de venta: $' + item.price,
-			x + padding,
-			y + padding + 35 + textSpacing
-		)
+		const size = 20
+		const x = tooltipX + padding
+
+		const info = [
+			{ label: item.name, y: tooltipY + padding + 15 },
+			{ label: item.description, y: tooltipY + padding + 15 * 2 },
+			{
+				label: 'Precio de venta: $' + item.price,
+				y: tooltipY + padding + 15 * 3,
+			},
+		]
+		info.forEach((e) => Text({ x, size, ctx, ...e }))
 	}
 
 	buyItem(slot) {

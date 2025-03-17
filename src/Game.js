@@ -1,10 +1,13 @@
 import { Keyboard } from './core/events/Keyboard.js'
 import { EventSystem } from './core/events/EventSystem.js'
 import { SceneManager } from './core/managers/SceneManager.js'
+import { loadFonts } from './core/fonts.js'
 
 import { CustomCursor } from './components/CustomCursor.js'
-import { Player } from './entities/player.js'
 import { GameClock } from './components/GameClock.js'
+import { Text } from './components/Text.js'
+
+import { Player } from './entities/player.js'
 
 import { SCENES } from './core/constants.js'
 import { MenuScene } from './scenes/menu/MenuScene.js'
@@ -59,6 +62,8 @@ export class Game {
 			isPopupOpen: false,
 			isButtonClicked: false,
 		}
+
+		loadFonts()
 		this.setupCanvas()
 		this.setupEvents()
 		this.animate()
@@ -74,6 +79,9 @@ export class Game {
 
 		this.ctx.clearRect(0, 0, this.width, this.height)
 		this.sceneManager.update(deltatime)
+
+		// this.ctx.font = '20px Pirate One'
+		// this.ctx.fillText('Texto con fuente personalizada', 50, 50)
 
 		// Renderizados
 		this.sceneManager.render()
@@ -138,10 +146,21 @@ export class Game {
 
 	/* Others */
 	renderLevelInterface() {
-		this.ctx.fillStyle = 'white'
-		this.ctx.font = '14px Arial'
-
-		this.ctx.fillText(this.clock.getTime(), 70, 20)
-		this.ctx.fillText(`Oro: ${this.player.resources.gold}`, 10, 20)
+		Text({
+			x: 10,
+			y: 20,
+			ctx: this.ctx,
+			label: this.clock.getTime(),
+			type: 'Pirate One',
+			size: 20,
+		})
+		Text({
+			x: 70,
+			y: 20,
+			ctx: this.ctx,
+			label: `Oro: ${this.player.resources.gold}`,
+			type: 'Pirate One',
+			size: 20,
+		})
 	}
 }

@@ -42,6 +42,14 @@ export class DialogManager {
 		if (selectedOption?.callback) {
 			selectedOption.callback()
 		}
+		// Si la opción es "Comerciar", abrir la ventana de comercio
+		if (selectedOption.text === 'Comerciar') {
+			this.eventSystem.emit('playerTradeWindowOpen', {
+				player: this.game.player,
+				npc: this.currentNPC,
+			})
+			return // Detener el avance del diálogo
+		}
 
 		this.currentMessageIndex++
 		this.advanceDialogue()

@@ -1,7 +1,7 @@
-import { loadImage } from '../../../core/utils.js'
+import { loadImage } from '../../core/utils.js'
 
-const BG_IMG = '/src/entities/player/inventory/assets/slot.png'
-const BG_HOVER_IMG = '/src/entities/player/inventory/assets/slot_hovered.png'
+const BG_IMG = '/src/components/inventory/assets/slot.png'
+const BG_HOVER_IMG = '/src/components/inventory/assets/slot_hovered.png'
 
 export class Slot {
 	constructor(x, y, size) {

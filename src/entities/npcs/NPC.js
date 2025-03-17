@@ -1,14 +1,26 @@
+import { Inventory } from '../../components/inventory/Inventory.js'
+
 export class NPC {
-	constructor(x, y, color, dialogs = [], eventSystem) {
+	constructor(x, y, color, dialogs = [], inventory = [], game) {
+		this.game = game
 		this.x = x
 		this.y = y
 		this.width = 32
 		this.height = 32
 		this.color = color
 		this.dialogs = dialogs // Array de mensajes
-		this.eventSystem = eventSystem
 
 		this.isInteracting = false
+		this.inventory = new Inventory(this, 10, 5)
+
+		if (inventory.length > 0) {
+			inventory.forEach((item) => {
+				this.inventory.addItem(
+					item,
+					Math.floor(Math.random() * item.maxStack) + 1
+				)
+			})
+		}
 	}
 
 	draw(ctx, camera) {
@@ -19,14 +31,12 @@ export class NPC {
 	interact() {
 		if (!this.isInteracting) {
 			this.isInteracting = true
-			// Emitir evento de inicio de interacción
-			this.eventSystem.emit('npcInteracted', this)
+			this.game.eventSystem.emit('npcInteracted', this)
 		}
 	}
 
 	endInteraction() {
 		this.isInteracting = false
-		// Emitir evento de fin de interacción
-		this.eventSystem.emit('interactionEnded', this)
+		this.game.eventSystem.emit('interactionEnded', this)
 	}
 }

@@ -1,6 +1,4 @@
-import { UIManager } from '../../core/managers/UIManager.js'
-
-import { Inventory } from './inventory/Inventory.js'
+import { Inventory } from '../../components/inventory/Inventory.js'
 import { Item } from '../../components/Item.js'
 
 const testItems = [
@@ -38,7 +36,6 @@ export class Player {
 	constructor(x, y, game) {
 		this.game = game
 		this.eventSystem = this.game.eventSystem
-		this.uiManager = new UIManager(this.game)
 		this.x = x
 		this.y = y
 		this.width = 32
@@ -56,8 +53,7 @@ export class Player {
 		// this.drunk = 0
 
 		// Inventario
-		this.inventory = new Inventory(this)
-		this.isInventoryOpen = false
+		this.inventory = new Inventory(this, 450, 5, false)
 
 		this.reputation = {
 			pirates: 0,
@@ -67,15 +63,13 @@ export class Player {
 		this.resources = {
 			food: 10,
 			wood: 5,
-			gold: 0,
+			gold: 200,
 		}
 		this.skills = {
 			navigation: 1,
 			negotiation: 1,
 			survival: 1,
 		}
-
-		this.uiManager.addComponent(this.inventory)
 
 		this.init()
 	}
@@ -99,7 +93,7 @@ export class Player {
 		ctx.fillStyle = this.color
 		ctx.fillRect(this.x - camera.x, this.y - camera.y, this.width, this.height)
 
-		this.uiManager.renderComponents()
+		this.inventory.isOpen && this.inventory.draw(ctx)
 	}
 
 	/* Movement */
@@ -130,18 +124,16 @@ export class Player {
 
 	/* Events */
 	mouseUp(mouseX, mouseY, e) {
-		this.uiManager.mouseUp(mouseX, mouseY, e)
+		this.inventory.mouseUp(mouseX, mouseY, e)
 	}
 	mouseDown(mouseX, mouseY, e) {
-		this.uiManager.mouseDown(mouseX, mouseY, e)
+		this.inventory.mouseDown(mouseX, mouseY, e)
 	}
 
 	mouseMove(mouseX, mouseY, e) {
-		this.uiManager.mouseMove(mouseX, mouseY, e)
+		this.inventory.mouseMove(mouseX, mouseY, e)
 	}
-	handleClick(mouseX, mouseY, e) {
-		this.uiManager.handleClick(mouseX, mouseY, e)
-	}
+	handleClick(mouseX, mouseY, e) {}
 	updateInputs() {
 		this.direction = {
 			left: this.game.keyboard.onPress.a,

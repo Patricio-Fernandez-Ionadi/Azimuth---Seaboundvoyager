@@ -3,7 +3,7 @@ import { EventSystem } from './core/events/EventSystem.js'
 import { SceneManager } from './core/managers/SceneManager.js'
 
 import { CustomCursor } from './components/CustomCursor.js'
-import { Player } from './entities/player/player.js'
+import { Player } from './entities/player.js'
 import { GameClock } from './components/GameClock.js'
 
 import { SCENES } from './core/constants.js'

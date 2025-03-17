@@ -110,5 +110,9 @@ export class DialogManager {
 			ctx.fillText(option.text, x + padding, y + padding + 30 * index)
 		})
 		ctx.restore()
+
+		if (this.game.keyboard.onPress.escape) {
+			this.endDialogue()
+		}
 	}
 }

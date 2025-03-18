@@ -1,90 +1,17 @@
-import { CameraManager } from '../../core/managers/CameraManager.js'
-import { DialogManager } from '../../core/managers/DialogManager.js'
+import { CameraManager } from '../../../core/managers/CameraManager.js'
+import { DialogManager } from '../../../core/managers/DialogManager.js'
 
-import { NPC } from '../../entities/NPC.js'
-import { Button } from '../../components/Button.js'
-import { TradeWindow } from '../../components/TradeWindow.js'
+import { NPC } from '../../../entities/NPC.js'
+import { Button } from '../../../components/Button.js'
+import { TradeWindow } from '../../../components/TradeWindow.js'
 
-import { SCENES } from '../../core/constants.js'
-import { checkCollisions } from '../../core/utils.js'
-import { Item } from '../../components/Item.js'
+import { SCENES } from '../../../core/constants.js'
+import { checkCollisions } from '../../../core/utils.js'
+
+import NPCData from './npcs.js'
 
 const MOCK_WIDTH = 1984 /* 124 * 16 */
 const MOCK_HEIGHT = 1088 /* 68 * 16 */
-
-const NPCS = [
-	{
-		x: 340,
-		y: 320,
-		color: 'blue',
-		speech: [
-			'¡Bienvenido a Puerto Valeris!',
-			'¿Necesitas algo, marinero?',
-			{
-				message: 'Puedo ofrecerte algunos suministros.',
-				options: [
-					{
-						text: 'Comerciar',
-						callback: () => console.log('Abrir ventana de comercio'),
-					},
-					{ text: 'Salir', callback: () => console.log('Salir del diálogo') },
-				],
-			},
-			'¡Buena suerte en tu viaje!',
-		],
-	},
-	{
-		x: 300,
-		y: 260,
-		color: 'green',
-		speech: [
-			'Hola, forastero.',
-			'Este lugar es peligroso.',
-			'Ten cuidado con los piratas.',
-		],
-	},
-	{
-		x: 380,
-		y: 50,
-		color: 'yellow',
-		speech: [
-			'¡Bienvenido a mi tienda!',
-			{
-				message: 'Puedo ofrecerte algunos suministros.',
-				options: [
-					{
-						text: 'Comerciar',
-						callback: () => console.log('Abrir ventana de comercio'),
-					},
-					{ text: 'Salir', callback: () => console.log('Salir del diálogo') },
-				],
-			},
-		],
-		inventory: [
-			new Item(
-				1,
-				'Gold Key',
-				'Una llave unica, debe ser para algo valioso.',
-				'/src/components/assets/items/key_gold_item.png',
-				16
-			),
-			new Item(
-				4,
-				'Mapa de la region',
-				'Contiene informacion valiosa de la zona.',
-				'/src/components/assets/items/map_item.png',
-				1
-			),
-			new Item(
-				5,
-				'Macoña',
-				'Para relajarse.',
-				'/src/components/assets/items/weed_item.png',
-				16
-			),
-		],
-	},
-]
 
 const building = {
 	x: 350,
@@ -170,6 +97,8 @@ export class PuertoValerisScene {
 		if (this.keys.onPress.escape && this.tradeWindow) {
 			this.tradeWindow.close()
 		}
+		// console.log(this.game.clock.currentHour)
+		this.npcs.forEach((e) => e.shop?.checkRestock(this.game.clock.currentHour))
 	}
 
 	render() {
@@ -244,16 +173,17 @@ export class PuertoValerisScene {
 	/* Load/Unload */
 	#init() {
 		this.camera.setMapBounds(MOCK_WIDTH, MOCK_HEIGHT)
-		this.npcs = NPCS.map(
+		this.npcs = []
+		this.npcs = NPCData.map(
 			(data) =>
-				new NPC(
-					data.x,
-					data.y,
-					data.color,
-					data.speech,
-					data.inventory ? data.inventory : [],
-					this.game
-				)
+				new NPC({
+					x: data.x,
+					y: data.y,
+					color: data.color,
+					dialogs: data.speech,
+					shopConfig: data.shopConfig ?? data.shopConfig,
+					game: this.game,
+				})
 		)
 
 		// Agregamos objetos colisionables por el jugador
@@ -266,7 +196,7 @@ export class PuertoValerisScene {
 			this.dialogManager.startDialogue(npc)
 		})
 		this.eventSystem.on('interactionEnded', (npc) => {
-			console.log(`Fin de interacción con NPC en (${npc.x}, ${npc.y})`)
+			// console.log(`Fin de interacción con NPC en (${npc.x}, ${npc.y})`)
 		})
 		this.eventSystem.on('playerTradeWindowOpen', ({ player, npc }) => {
 			this.tradeWindow = new TradeWindow(this.game, player, npc)

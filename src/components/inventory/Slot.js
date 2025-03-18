@@ -72,7 +72,7 @@ export class Slot {
 		if (!this.item) {
 			this.item = item
 			this.quantity = quantity
-		} else if (this.item.id === item.id) {
+		} else if (this.item.id === item.id && this.item.stackeable) {
 			this.quantity += quantity
 		} else {
 			console.warn('El slot ya contiene un ítem diferente')

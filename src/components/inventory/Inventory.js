@@ -83,6 +83,7 @@ export class Inventory {
 
 	/* Render */
 	renderSlots(ctx) {
+		// console.log(this)
 		for (let row = 0; row < this.rows; row++) {
 			for (let col = 0; col < this.cols; col++) {
 				this.slots[row][col].draw(ctx)
@@ -101,51 +102,74 @@ export class Inventory {
 	}
 	drawTooltip(ctx, item) {
 		const width = 200
-		const height = 75
+		let height = 30
 		const padding = 10
 		const margin = 20
+		const size = 20
+		const lineHeight = 18
 		const tooltipX = this.hoveredSlot.x /* + this.slotSize + margin */
 		const tooltipY = this.hoveredSlot.y + this.slotSize + margin
+		const x = tooltipX + padding
+		const y = tooltipY + padding
+
+		const price =
+			this.owner instanceof Player ? item.price.sell : item.price.buy
+		const quality = item.quality
+
+		const info = [
+			{ label: item.name, y: y + lineHeight },
+			{ label: item.description, y: y + lineHeight * 2 },
+			{
+				label: 'Precio de venta: $' + price,
+				y: y + lineHeight * 3,
+			},
+			{
+				label: quality,
+				color:
+					quality === 'exelent'
+						? 'lightgreen'
+						: quality === 'rare'
+						? 'violet'
+						: 'white',
+				y: y + lineHeight * 4,
+			},
+		]
+
+		if (item.categories.includes('contraband')) {
+			info.push({
+				label: 'Objeto ilegal.',
+				y: y + lineHeight * 5,
+				color: 'red',
+			})
+		}
+		// podriamos ver si el item tiene stats tambien para mostrar
+
+		height = padding * 2 + lineHeight * info.length
 
 		// Fondo del tooltip
 		ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
 		ctx.fillRect(tooltipX, tooltipY, width, height)
 
-		const size = 20
-		const x = tooltipX + padding
-
-		const info = [
-			{ label: item.name, y: tooltipY + padding + 15 },
-			{ label: item.description, y: tooltipY + padding + 15 * 2 },
-			{
-				label: 'Precio de venta: $' + item.price,
-				y: tooltipY + padding + 15 * 3,
-			},
-		]
 		info.forEach((e) => Text({ x, size, ctx, ...e }))
 	}
 
 	buyItem(slot) {
 		const item = slot.item
-		const price = item.price
+		const price = item.price.buy
 
 		const player = this.owner.game.player
-		// if (!player || !player.resources) {
-		// 	console.warn('No se puede comprar: Jugador no válido')
-		// 	return
-		// }
 
 		if (player.resources.gold >= price) {
 			player.resources.gold -= price
-			player.inventory.addItem(item, 1) // Añadir el ítem al inventario del jugador
-			slot.removeItem(1) // Eliminar una unidad del inventario del NPC
+			player.inventory.addItem(item, 1) // Añadir al jugador
+			slot.removeItem(1) // del NPC
 			console.log(`Comprado: ${item.name}`)
 		} else {
 			console.warn('No tienes suficiente oro para comprar este ítem')
 		}
 	}
 	addItem(item, quantity = 1) {
-		for (let row = 0; row < this.rows; row++) {
+		/* for (let row = 0; row < this.rows; row++) {
 			for (let col = 0; col < this.cols; col++) {
 				const slot = this.slots[row][col]
 				if (!slot.item || slot.item.id === item.id) {
@@ -168,6 +192,25 @@ export class Inventory {
 		}
 
 		console.warn('Inventario lleno')
+		return false */
+		for (let row of this.slots) {
+			for (let slot of row) {
+				if (!slot.item) {
+					// Si el slot está vacío, agregar el ítem
+					slot.addItem(item, quantity)
+					return true
+				} else if (
+					slot.item.id === item.id &&
+					slot.item.stackeable &&
+					slot.quantity + quantity <= slot.item.maxStack
+				) {
+					// Si el ítem es apilable y cabe en el slot, incrementar la cantidad
+					slot.quantity += quantity
+					return true
+				}
+			}
+		}
+		console.warn('Inventario lleno: No hay espacio para agregar el ítem.')
 		return false
 	}
 	dropItem(mouseX, mouseY) {
@@ -191,7 +234,7 @@ export class Inventory {
 			if (this.tradeMode) {
 				// En modo de comercio, intentar vender el ítem
 				if (this.owner instanceof Player && this.draggedItem?.price) {
-					const sellPrice = this.draggedItem.price * this.draggedQuantity
+					const sellPrice = this.draggedItem.price.sell * this.draggedQuantity
 					this.owner.resources.gold += sellPrice
 					console.log(
 						`Vendido: ${this.draggedItem.name} x${this.draggedQuantity}`

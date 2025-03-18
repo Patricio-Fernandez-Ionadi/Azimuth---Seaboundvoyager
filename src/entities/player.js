@@ -1,36 +1,4 @@
 import { Inventory } from '../components/inventory/Inventory.js'
-import { Item } from '../components/Item.js'
-
-const testItems = [
-	new Item(
-		1,
-		'Gold Key',
-		'Una llave unica, debe ser para algo valioso.',
-		'/src/components/assets/items/key_gold_item.png',
-		16
-	),
-	new Item(
-		2,
-		'Botella de Ron',
-		'Una sucia y vieja botella de ron.',
-		'/src/components/assets/items/rum_bottle_item.png',
-		16
-	),
-	new Item(
-		3,
-		'Fragmento de mapa',
-		'Faltan partes para poder entenderlo.',
-		'/src/components/assets/items/map_fragment_item.png',
-		16
-	),
-	new Item(
-		4,
-		'Mapa de la region',
-		'Contiene informacion valiosa de la zona.',
-		'/src/components/assets/items/map_item.png',
-		16
-	),
-]
 
 export class Player {
 	constructor(x, y, game) {
@@ -150,13 +118,14 @@ export class Player {
 
 	/* Load */
 	init() {
-		// TEST inventario
-		testItems.forEach((item, index) => {
-			this.inventory.addItem(
-				item,
-				Math.floor(Math.random() * item.maxStack) + 1
-			)
-		})
+		const initialInventory = [
+			this.game.itemsManager.getItem(10), // Carne de res
+			this.game.itemsManager.getItem(1), // Gold Key
+			this.game.itemsManager.getItem(13), // Puñal
+		]
+		this.inventory.addItem(initialInventory[0], 10)
+		this.inventory.addItem(initialInventory[1], 1)
+		this.inventory.addItem(initialInventory[2], 1)
 
 		this.eventSystem.on('stopPlayerMotion', ({ side, object }) => {
 			if (side) {

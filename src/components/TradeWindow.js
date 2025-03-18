@@ -8,9 +8,14 @@ export class TradeWindow {
 		this.width = this.game.width
 		this.height = 800
 		this.isOpen = true
-
+		// Verificar si el NPC tiene una tienda
+		if (this.npc.shop) {
+			this.npcInventory = this.npc.shop.inventory
+		} else {
+			this.npcInventory = this.npc.inventory
+		}
 		this.player.inventory.isOpen = true
-		this.npc.inventory.isOpen = true
+		this.npcInventory.isOpen = true
 	}
 
 	draw(ctx) {
@@ -19,34 +24,26 @@ export class TradeWindow {
 		ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
 		ctx.fillRect(this.x, this.y, this.width, this.height)
 
-		this.npc.inventory.draw(ctx)
+		this.npcInventory.draw(ctx)
 		this.player.inventory.draw(ctx)
 	}
 
 	mouseDown(mouseX, mouseY) {
 		if (!this.isOpen) return
-		this.npc.inventory.mouseDown(mouseX, mouseY)
-
-		// // Manejar clics en el inventario del NPC
-		// const npcSlotClicked = this.npc.inventory.slots.some((row) =>
-		// 	row.some((slot) => slot.handleClick(mouseX, mouseY))
-		// )
-		// if (npcSlotClicked) {
-		// 	this.buyItem(mouseX, mouseY)
-		// }
+		this.npcInventory.mouseDown(mouseX, mouseY)
 	}
 
 	mouseMove(mouseX, mouseY) {
 		if (!this.isOpen) return
-		this.npc.inventory.mouseMove(mouseX, mouseY)
+		this.npcInventory.mouseMove(mouseX, mouseY)
 	}
 
 	mouseUp(mouseX, mouseY) {}
 
-	buyItem(mouseX, mouseY) {
-		for (let row = 0; row < this.npc.inventory.rows; row++) {
-			for (let col = 0; col < this.npc.inventory.cols; col++) {
-				const slot = this.npc.inventory.slots[row][col]
+	/* buyItem(mouseX, mouseY) {
+		for (let row = 0; row < this.npcInventory.rows; row++) {
+			for (let col = 0; col < this.npcInventory.cols; col++) {
+				const slot = this.npcInventory.slots[row][col]
 				if (slot.handleClick(mouseX, mouseY) && slot.item) {
 					if (!slot.item.price) {
 						console.warn(`El ítem ${slot.item.name} no tiene precio`)
@@ -64,12 +61,12 @@ export class TradeWindow {
 				}
 			}
 		}
-	}
+	} */
 
 	close() {
 		this.isOpen = false
 		this.player.inventory.isOpen = false
-		this.npc.inventory.isOpen = false
+		this.npcInventory.isOpen = false
 		this.game.eventSystem.emit('tradeWindowClosed')
 	}
 }

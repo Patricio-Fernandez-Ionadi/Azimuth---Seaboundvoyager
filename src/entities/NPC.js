@@ -1,7 +1,7 @@
-import { Inventory } from '../components/inventory/Inventory.js'
+import { Shop } from '../components/Shop.js'
 
 export class NPC {
-	constructor(x, y, color, dialogs = [], inventory = [], game) {
+	constructor({ x, y, color, dialogs = [], game, shopConfig = null }) {
 		this.game = game
 		this.x = x
 		this.y = y
@@ -9,18 +9,18 @@ export class NPC {
 		this.height = 32
 		this.color = color
 		this.dialogs = dialogs // Array de mensajes
-
 		this.isInteracting = false
-		this.inventory = new Inventory(this, 10, 50)
 
-		if (inventory.length > 0) {
-			inventory.forEach((item) => {
-				this.inventory.addItem(
-					item,
-					Math.floor(Math.random() * item.maxStack) + 1
-				)
-			})
-		}
+		// console.log(shopConfig)
+		this.shop = shopConfig
+			? new Shop(
+					this,
+					shopConfig.categories,
+					shopConfig.restockTimes,
+					shopConfig.exclude,
+					shopConfig.qualities
+			  )
+			: null
 	}
 
 	draw(ctx, camera) {

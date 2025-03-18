@@ -3,8 +3,9 @@ import { EventSystem } from './core/events/EventSystem.js'
 import { SceneManager } from './core/managers/SceneManager.js'
 import { loadFonts } from './core/fonts.js'
 
-import { CustomCursor } from './components/CustomCursor.js'
+import { ItemsManager } from './components/items/ItemsManager.js'
 import { GameClock } from './components/GameClock.js'
+import { CustomCursor } from './components/CustomCursor.js'
 import { Text } from './components/Text.js'
 
 import { Player } from './entities/player.js'
@@ -13,7 +14,7 @@ import { SCENES } from './core/constants.js'
 import { MenuScene } from './scenes/menu/MenuScene.js'
 import { NewGameScene } from './scenes/creation/NewGameScene.js'
 import { WorldMapScene } from './scenes/world-map/WorldMapScene.js'
-import { PuertoValerisScene } from './scenes/cities/PuertoValeris.js'
+import { PuertoValerisScene } from './scenes/cities/a_puertovaleris/PuertoValeris.js'
 
 export class Game {
 	constructor() {
@@ -32,9 +33,10 @@ export class Game {
 
 		/* Pointer */
 		this.customCursor = new CustomCursor(this)
-		this.keyboard = new Keyboard()
 
 		/* Sistemas */
+		this.itemsManager = new ItemsManager(this)
+		this.keyboard = new Keyboard()
 		this.eventSystem = new EventSystem()
 		this.sceneManager = new SceneManager(this)
 		this.clock = new GameClock(this)
@@ -75,13 +77,9 @@ export class Game {
 		const deltaTime = currentTime - this.lastFrameTime
 		this.lastFrameTime = currentTime
 		this.clock.update(deltaTime) // Actualizar el reloj del juego
-		// console.log(this.clock)
 
 		this.ctx.clearRect(0, 0, this.width, this.height)
 		this.sceneManager.update(deltatime)
-
-		// this.ctx.font = '20px Pirate One'
-		// this.ctx.fillText('Texto con fuente personalizada', 50, 50)
 
 		// Renderizados
 		this.sceneManager.render()

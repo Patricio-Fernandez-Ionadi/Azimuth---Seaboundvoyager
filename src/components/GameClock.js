@@ -5,6 +5,7 @@ export class GameClock {
 		this.totalGameMinutes = 24 * 60 // Total de minutos en un día del juego
 		this.currentTime = 6 * 60 // Iniciar a las 6:00 AM (en minutos)
 		this.timeMultiplier = 0.4 // Multiplicador de velocidad del tiempo
+		// this.timeMultiplier = 10
 	}
 
 	getTime() {
@@ -22,6 +23,7 @@ export class GameClock {
 		const elapsedRealSeconds = (deltaTime / 1000) * this.timeMultiplier
 		const elapsedGameMinutes = elapsedRealSeconds * this.secondsPerRealSecond
 		this.currentTime += elapsedGameMinutes
+		this.currentHour = this.currentTime / 60
 
 		// Reiniciar el ciclo si supera las 24 horas
 		if (this.currentTime >= this.totalGameMinutes) {

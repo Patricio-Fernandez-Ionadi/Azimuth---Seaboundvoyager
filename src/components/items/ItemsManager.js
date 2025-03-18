@@ -35,6 +35,7 @@ export class ItemsManager {
 		// Crear una nueva instancia del ítem
 		return new Item(itemData)
 	}
+
 	getItemsByIncludedCategories(categories, items) {
 		if (items) {
 			return items.filter((item) =>
@@ -123,7 +124,6 @@ export class ItemsManager {
 			return []
 		}
 	}
-
 	getByQuality(qualities, probabilities = {}) {
 		if (Array.isArray(qualities)) {
 			const filteredItems = this.gameItemsData.filter((item) =>
@@ -175,7 +175,6 @@ export class ItemsManager {
 
 		return result
 	}
-
 	getRandomItems(count, options = {}) {
 		const { categories, exclusions, qualities, probabilities } = options
 

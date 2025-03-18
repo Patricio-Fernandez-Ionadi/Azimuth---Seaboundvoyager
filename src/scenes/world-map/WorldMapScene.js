@@ -100,7 +100,7 @@ export class WorldMapScene {
 		this.camera.mouseDown(mouseX, mouseY, e)
 	}
 	mouseMove(mouseX, mouseY, e) {
-		if (!this.game.interactionState.isPopupOpen) {
+		if (!this.popupManager.isPopupOpen) {
 			this.camera.handleDrag(mouseX, mouseY, e)
 		}
 		this.uiManager.mouseMove(mouseX, mouseY, e)

@@ -4,7 +4,7 @@ import { SceneManager } from './core/managers/SceneManager.js'
 import { loadFonts } from './core/fonts.js'
 
 import { ItemsManager } from './components/items/ItemsManager.js'
-import { GameClock } from './components/GameClock.js'
+import { GameClock } from './core/managers/GameClock.js'
 import { CustomCursor } from './components/CustomCursor.js'
 import { Text } from './components/Text.js'
 
@@ -31,9 +31,6 @@ export class Game {
 		this.width = this.tileSize * this.cols
 		this.height = this.tileSize * this.rows
 
-		/* Pointer */
-		this.customCursor = new CustomCursor(this)
-
 		/* Sistemas */
 		this.itemsManager = new ItemsManager(this)
 		this.keyboard = new Keyboard()
@@ -43,6 +40,8 @@ export class Game {
 		this.lastFrameTime = Date.now()
 
 		this.player = new Player(100, 100, this)
+		/* Pointer */
+		this.customCursor = new CustomCursor(this)
 
 		/* Escenas */
 		this.sceneManager.addScene(SCENES.menu, new MenuScene(this))
@@ -59,15 +58,8 @@ export class Game {
 		// this.sceneManager.changeScene(SCENES.map)
 		this.sceneManager.changeScene(SCENES.city.valeris)
 
-		/* Estados */
-		this.interactionState = {
-			isPopupOpen: false,
-			isButtonClicked: false,
-		}
-
 		loadFonts()
 		this.setupCanvas()
-		this.setupEvents()
 		this.animate()
 	}
 
@@ -75,16 +67,19 @@ export class Game {
 	animate(deltatime) {
 		const currentTime = Date.now()
 		const deltaTime = currentTime - this.lastFrameTime
-		this.lastFrameTime = currentTime
-		this.clock.update(deltaTime) // Actualizar el reloj del juego
-
+		// limpieza canvas
 		this.ctx.clearRect(0, 0, this.width, this.height)
+
+		// Actualizaciones
+		this.lastFrameTime = currentTime
+		this.clock.update(deltaTime)
 		this.sceneManager.update(deltatime)
 
 		// Renderizados
 		this.sceneManager.render()
 		this.customCursor.draw(this.ctx)
 
+		// loop
 		requestAnimationFrame(() => this.animate())
 	}
 
@@ -93,53 +88,6 @@ export class Game {
 		this.canvas.style.backgroundColor = '#222'
 		this.canvas.width = this.width
 		this.canvas.height = this.height
-	}
-	setupEvents() {
-		this.input = { mouseX: 0, mouseY: 0 }
-		this.canvas.addEventListener('click', (e) => this.handleClick(e))
-
-		/* Drag */
-		this.canvas.addEventListener('mousedown', (e) => this.mouseDown(e))
-		this.canvas.addEventListener('mouseup', (e) => this.mouseUp(e))
-		this.canvas.addEventListener('mousemove', (e) => this.mouseMove(e))
-	}
-
-	/* Events */
-	handleClick(e) {
-		const mouseX = e.offsetX
-		const mouseY = e.offsetY
-		const activeScene = this.sceneManager.activeScene
-		if (activeScene) activeScene.handleClick?.(mouseX, mouseY, e)
-		this.player.handleClick(mouseX, mouseY, e)
-	}
-	mouseDown(e) {
-		const mouseX = e.offsetX
-		const mouseY = e.offsetY
-		const activeScene = this.sceneManager.activeScene
-		if (activeScene) activeScene.mouseDown?.(mouseX, mouseY, e)
-
-		this.player.mouseDown(mouseX, mouseY, e)
-		this.customCursor.setModel('left')
-	}
-	mouseUp(e) {
-		const mouseX = e.offsetX
-		const mouseY = e.offsetY
-		const activeScene = this.sceneManager.activeScene
-		if (activeScene) activeScene.mouseUp?.(mouseX, mouseY, e)
-
-		this.player.mouseUp(mouseX, mouseY, e)
-		this.customCursor.setModel('right')
-	}
-	mouseMove(e) {
-		const mouseX = e.offsetX
-		const mouseY = e.offsetY
-		this.input.mouseX = e.offsetX
-		this.input.mouseY = e.offsetY
-		const activeScene = this.sceneManager.activeScene
-		if (activeScene) activeScene.mouseMove?.(mouseX, mouseY, e)
-
-		this.player.mouseMove(mouseX, mouseY, e)
-		this.customCursor.updatePosition(mouseX, mouseY, e)
 	}
 
 	/* Others */

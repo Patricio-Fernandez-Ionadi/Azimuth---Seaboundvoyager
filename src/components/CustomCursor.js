@@ -11,25 +11,70 @@ export class CustomCursor {
 		this.shadowRadius = 10 // Radio de la sombra circular
 		this.shadowBlur = 10 // Intensidad del difuminado
 		this.shadowColor = 'rgba(0, 0, 0, 0.5)' // Color de la sombra (negro con transparencia)
+
+		this.input = { mouseX: 0, mouseY: 0 }
+		this.game.canvas.addEventListener('click', (e) => this.handleClick(e))
+		this.game.canvas.addEventListener('mousedown', (e) => this.mouseDown(e))
+		this.game.canvas.addEventListener('mouseup', (e) => this.mouseUp(e))
+		this.game.canvas.addEventListener('mousemove', (e) => this.mouseMove(e))
 	}
 
-	draw(ctx) {
+	/* Events */
+	handleClick(e) {
+		const mouseX = e.offsetX
+		const mouseY = e.offsetY
+		const activeScene = this.game.sceneManager.activeScene
+		if (activeScene) activeScene.handleClick?.(mouseX, mouseY, e)
+		this.game.player.handleClick(mouseX, mouseY, e)
+	}
+	mouseDown(e) {
+		const mouseX = e.offsetX
+		const mouseY = e.offsetY
+		const activeScene = this.game.sceneManager.activeScene
+		if (activeScene) activeScene.mouseDown?.(mouseX, mouseY, e)
+
+		this.game.player.mouseDown(mouseX, mouseY, e)
+		this.setModel('left')
+	}
+	mouseUp(e) {
+		const mouseX = e.offsetX
+		const mouseY = e.offsetY
+		const activeScene = this.game.sceneManager.activeScene
+		if (activeScene) activeScene.mouseUp?.(mouseX, mouseY, e)
+
+		this.game.player.mouseUp(mouseX, mouseY, e)
+		this.setModel('right')
+	}
+	mouseMove(e) {
+		const mouseX = e.offsetX
+		const mouseY = e.offsetY
+		this.input.mouseX = e.offsetX
+		this.input.mouseY = e.offsetY
+		const activeScene = this.game.sceneManager.activeScene
+		if (activeScene) activeScene.mouseMove?.(mouseX, mouseY, e)
+
+		this.position.x = mouseX
+		this.position.y = mouseY
+		this.game.player.mouseMove(mouseX, mouseY, e)
+	}
+
+	draw() {
 		if (!this.image.complete) return // Esperar a que la imagen cargue
 
 		// Dibujar la sombra circular
-		ctx.save()
-		ctx.beginPath()
-		ctx.arc(
+		this.game.ctx.save()
+		this.game.ctx.beginPath()
+		this.game.ctx.arc(
 			this.position.x + 12, // Centro X del cursor
 			this.position.y + 15, // Centro Y del cursor
 			this.shadowRadius, // Radio de la sombra
 			0,
 			Math.PI * 2
 		)
-		ctx.fillStyle = this.shadowColor
-		ctx.filter = `blur(${this.shadowBlur}px)` // Aplicar el desenfoque
-		ctx.fill()
-		ctx.restore()
+		this.game.ctx.fillStyle = this.shadowColor
+		this.game.ctx.filter = `blur(${this.shadowBlur}px)` // Aplicar el desenfoque
+		this.game.ctx.fill()
+		this.game.ctx.restore()
 
 		// Definir la región de recorte según el modelo actual
 		const sx = this.currentModel === 'right' ? 0 : this.modelWidth
@@ -38,7 +83,7 @@ export class CustomCursor {
 		const sh = this.modelHeight
 
 		// Dibujar el cursor en la posición actual
-		ctx.drawImage(
+		this.game.ctx.drawImage(
 			this.image,
 			sx,
 			sy,
@@ -49,11 +94,6 @@ export class CustomCursor {
 			30,
 			30 // Escala
 		)
-	}
-
-	updatePosition(x, y) {
-		this.position.x = x
-		this.position.y = y
 	}
 
 	setModel(model) {

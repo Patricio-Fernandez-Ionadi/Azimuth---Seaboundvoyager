@@ -7,6 +7,7 @@ export class PopupManager {
 		this.scene = scene
 		this.uiManager = this.scene.uiManager
 		this.eventSystem = this.scene.game.eventSystem
+		this.isPopupOpen = false
 
 		// Escuchar el evento de clic en una zona
 		this.eventSystem.on('zoneClicked', ({ x, y, zone }) => {
@@ -15,7 +16,7 @@ export class PopupManager {
 	}
 
 	createPopup(x, y, clickedZone) {
-		if (this.scene.game.interactionState.isPopupOpen) return
+		if (this.isPopupOpen) return
 		// Cerrar cualquier popup existente antes de crear uno nuevo
 		this.clearPopups()
 
@@ -37,16 +38,16 @@ export class PopupManager {
 		popup.addButton('Cerrar', () => {
 			this.uiManager.removeComponent(popup)
 			popup.close()
-			waitFor(10, () => (this.scene.game.interactionState.isPopupOpen = false))
+			waitFor(10, () => (this.isPopupOpen = false))
 		})
 		popup.addButton('Seleccionar', () => {
-			this.scene.game.interactionState.isPopupOpen = false
+			this.isPopupOpen = false
 			this.eventSystem.emit('citySelected', clickedZone)
 			popup.close()
 		})
 
 		// Marcar el estado de popup abierto
-		this.scene.game.interactionState.isPopupOpen = true
+		this.isPopupOpen = true
 
 		// Añadir el popup al UIManager
 		this.uiManager.addComponent(popup)

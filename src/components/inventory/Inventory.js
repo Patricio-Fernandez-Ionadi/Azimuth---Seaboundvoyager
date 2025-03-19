@@ -190,15 +190,16 @@ export class Inventory {
 	addItem(item, quantity = 1) {
 		for (let row of this.slots) {
 			for (let slot of row) {
+				let canStack =
+					slot.item?.id === item?.id &&
+					slot.item?.stackeable &&
+					slot.quantity + quantity <= slot.item?.maxStack
+
 				if (!slot.item) {
 					// Si el slot está vacío, agregar el ítem
 					slot.addItem(item, quantity)
 					return { newSlot: true }
-				} else if (
-					slot.item.id === item.id &&
-					slot.item.stackeable &&
-					slot.quantity + quantity <= slot.item.maxStack
-				) {
+				} else if (canStack) {
 					// Si el ítem es apilable y cabe en el slot, incrementar la cantidad
 					slot.quantity += quantity
 					return { newSlot: false }

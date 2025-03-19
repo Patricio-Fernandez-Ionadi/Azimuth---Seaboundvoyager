@@ -49,22 +49,25 @@ export class Player {
 	update() {
 		this.y += this.velocity.y
 		this.x += this.velocity.x
-		this.updateInputs()
 
-		if (
-			!this.menuGame.isOpen &&
-			!this.inventory.tradeMode &&
-			!this.interactionRequired
-		) {
-			this.horizontalMovement()
-			this.verticalMovemet()
-		}
+		this.updateInputs()
+		this.horizontalMovement()
+		this.verticalMovemet()
 
 		// Abrir/Cerrar menu
 		if (
 			this.game.keyboard.onPress.tab &&
 			!this.keyPressed &&
 			!this.inventory.tradeMode
+		) {
+			this.keyPressed = true
+			this.eventSystem.emit('toggle_menugame')
+		}
+
+		if (
+			this.game.keyboard.onPress.escape &&
+			!this.keyPressed &&
+			this.menuGame.isOpen
 		) {
 			this.keyPressed = true
 			this.eventSystem.emit('toggle_menugame')
@@ -129,19 +132,21 @@ export class Player {
 		}
 		this.inventory.mouseMove(mouseX, mouseY, e)
 	}
-
 	updateInputs() {
+		if (!this.game.keyboard.pressed) this.keyPressed = false
+
 		this.direction = {
 			left: this.game.keyboard.onPress.a,
 			right: this.game.keyboard.onPress.d,
 			up: this.game.keyboard.onPress.w,
 			bottom: this.game.keyboard.onPress.s,
 		}
-		if (!this.game.keyboard.onPress.tab) {
-			this.keyPressed = false
-		}
-		this.interactionRequired =
+
+		const npcOptioning =
 			!!this.game.sceneManager?.activeScene?.dialogManager.currentOptions
+		const menuOpen = this.menuGame.isOpen
+
+		this.interactionRequired = npcOptioning || menuOpen
 	}
 
 	/* Load */

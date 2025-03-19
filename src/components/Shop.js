@@ -1,29 +1,34 @@
 import { Inventory } from './inventory/Inventory.js'
 
 export class Shop {
-	constructor(
-		owner,
-		categories,
-		restockTimes = [8, 17],
-		exclusions = [],
-		qualities = []
-	) {
+	constructor(owner, shopConfig) {
 		this.owner = owner
-		this.categories = categories
-		this.restockTimes = restockTimes // Horarios de reposición
-		this.exclusions = exclusions
-		this.qualities = qualities
+		this.conf = shopConfig
+		this.categories = this.conf.categories || []
+		this.restockTimes = this.conf.restockTimes || [8, 17]
+		this.exclusions = this.conf.exclusions || []
+		this.qualities = this.conf.qualities || []
+		this.maxItems = this.conf.randomItems?.maxItems || 12
 		this.inventory = new Inventory(this.owner, 10, 50)
 		this.lastRestock = null
 		this.initializeInventory()
 	}
 
 	initializeInventory() {
-		const maxItems = 12
 		let slotsOccupied = 0
 
-		while (slotsOccupied < maxItems) {
-			// Obtener un ítem aleatorio
+		// Agregar ítems predeterminados
+		this.conf.defaultItems?.forEach((defaultItem) => {
+			const itemData = this.owner.game.itemsManager.getItem(defaultItem.id)
+			if (itemData) {
+				itemData.isFixed = defaultItem.isFixed
+				this.inventory.addItem(itemData, defaultItem.quantity)
+				slotsOccupied += 1
+			}
+		})
+
+		while (slotsOccupied < this.maxItems) {
+			// 	// Obtener un ítem aleatorio
 			const item = this.owner.game.itemsManager.getRandomItem({
 				categories: this.categories,
 				qualities: this.qualities,
@@ -31,9 +36,9 @@ export class Shop {
 				exclusions: this.exclusions,
 			})
 
-			if (item && item.price.buy > 0) {
-				// Aplicar probabilidades?
-				// console.log(item)
+			if (item && item.price.buy) {
+				// 		// Aplicar probabilidades?
+				// 		// console.log(item)
 
 				const quantity = item.stackeable
 					? Math.floor(Math.random() * 20) + 1
@@ -41,6 +46,44 @@ export class Shop {
 
 				const { newSlot } = this.inventory.addItem(item, quantity)
 				if (newSlot) slotsOccupied += 1
+
+				if (this.conf.itemRules?.limitedItems?.includes(item.id)) {
+					item.isLimited = true
+				} // Verificar si el ítem es limitado
+			}
+		}
+		// Ordenar ítems
+		// this.sortInventory()
+	}
+
+	sortInventory() {
+		// Aplanar la cuadrícula de slots en un array plano
+		const flatSlots = this.inventory.slots.flat()
+
+		// Filtrar solo los slots que tienen ítems
+		const filledSlots = flatSlots.filter((slot) => slot.item)
+
+		// Ordenar los slots por categoría y precio
+		filledSlots.sort((a, b) => {
+			const categoryA = a.item.categories[0] || ''
+			const categoryB = b.item.categories[0] || ''
+			if (categoryA !== categoryB) {
+				return categoryA.localeCompare(categoryB)
+			}
+			return a.item.price.buy - b.item.price.buy
+		})
+		// Reorganizar los slots en la cuadrícula original
+		let index = 0
+		for (let row of this.inventory.slots) {
+			for (let slot of row) {
+				if (filledSlots[index]) {
+					slot.item = filledSlots[index].item
+					slot.quantity = filledSlots[index].quantity
+					index++
+				} else {
+					slot.item = null
+					slot.quantity = 0
+				}
 			}
 		}
 	}

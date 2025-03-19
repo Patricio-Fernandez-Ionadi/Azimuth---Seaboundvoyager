@@ -35,7 +35,7 @@ export class Player {
 		this.resources = {
 			food: 10,
 			wood: 5,
-			gold: 200,
+			gold: 200000,
 		}
 		this.skills = {
 			navigation: 1,
@@ -152,9 +152,9 @@ export class Player {
 	/* Load */
 	init() {
 		const initialInventory = [
-			this.game.itemsManager.getItem(10), // Carne de res
-			this.game.itemsManager.getItem(1), // Gold Key
-			this.game.itemsManager.getItem(13), // Puñal
+			this.game.itemsManager.getItem(61), // Carne de res
+			this.game.itemsManager.getItem(12), // Gold Key
+			this.game.itemsManager.getItem(71), // Puñal
 		]
 		this.inventory.addItem(initialInventory[0], 10)
 		this.inventory.addItem(initialInventory[1], 1)

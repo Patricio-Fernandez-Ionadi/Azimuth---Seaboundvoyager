@@ -174,15 +174,29 @@ export class Inventory {
 
 	buyItem(slot) {
 		const item = slot.item
-		const price = item.price.buy
+		if (!item) return
+		let itemAdded
 
+		const price = item.price.buy
 		const player = this.owner.game.player
 
 		if (player.resources.gold >= price) {
 			player.resources.gold -= price
-			player.inventory.addItem(item, 1) // Añadir al jugador
-			slot.removeItem(1) // del NPC
-			console.log(`Comprado: ${item.name}`)
+			itemAdded = player.inventory.addItem(item, 1)
+
+			if (itemAdded) {
+				// Verificar si el ítem es fijo o limitado
+				if (!item.isFixed) {
+					slot.removeItem(1) // Reducir cantidad
+					if (slot.quantity <= 0) {
+						slot.item = null
+					}
+				}
+
+				console.log(`Comprado: ${item.name}`)
+			} else {
+				console.log(`No Comprado: ${itemAdded}`)
+			}
 		} else {
 			console.warn('No tienes suficiente oro para comprar este ítem')
 		}

@@ -12,15 +12,7 @@ export class NPC {
 		this.isInteracting = false
 
 		// console.log(shopConfig)
-		this.shop = shopConfig
-			? new Shop(
-					this,
-					shopConfig.categories,
-					shopConfig.restockTimes,
-					shopConfig.exclude,
-					shopConfig.qualities
-			  )
-			: null
+		this.shop = shopConfig ? new Shop(this, shopConfig) : null
 	}
 
 	draw(ctx, camera) {

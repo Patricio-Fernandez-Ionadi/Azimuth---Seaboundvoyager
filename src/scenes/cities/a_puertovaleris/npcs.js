@@ -21,7 +21,7 @@ export default [
 		shopConfig: {
 			categories: ['consumible', 'food', 'cartography'],
 			restockTimes: [8, 17],
-			exclude: ['contraband'],
+			exclusions: ['contraband'],
 			qualities: ['common', 'rare'],
 		},
 	},
@@ -55,6 +55,16 @@ export default [
 		shopConfig: {
 			categories: ['consumible', 'contraband', 'weapon', 'pirate'],
 			restockTimes: [6, 18],
+			defaultItems: [
+				{ id: 61, quantity: 1, isFixed: true },
+				{ id: 83, quantity: 1, isFixed: true },
+				{ id: 12, quantity: 3, isFixed: false },
+			],
+			randomItems: {
+				categories: ['consumible', 'contraband', 'weapon', 'pirate'],
+				qualities: ['common', 'rare'],
+				maxItems: 10,
+			},
 		},
 	},
 ]

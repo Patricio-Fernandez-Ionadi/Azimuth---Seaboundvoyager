@@ -8,36 +8,41 @@ export class ItemsManager {
 	}
 	init() {
 		this.gameItemsData = []
-		this.innerId = 1
-		ITEMS_DATA.forEach((i) => {
+
+		ITEMS_DATA.forEach((item) => {
 			// Validar que el ítem tenga las propiedades necesarias
-			if (!i || !i.variant || typeof i.variant !== 'object') {
-				console.warn('Ítem inválido, saltando:', i)
+			if (!item || !item.variant || typeof item.variant !== 'object') {
+				console.warn('Ítem inválido, saltando:', item)
 				return
 			}
 
-			Object.keys(i.variant).forEach((v) => {
-				const variant = i.variant[v]
+			Object.keys(item.variant).forEach((v) => {
+				const variant = item.variant[v]
 				if (!variant) {
-					console.warn(`Variante '${v}' inválida para el ítem:`, i)
+					console.warn(`Variante '${v}' inválida para el ítem:`, item)
 					return
 				}
 
-				// Generar un ID único basado en el nombre del ítem y su calidad
-				const numericalId = this.innerId
-
 				const newItem = new Item({
-					...i,
-					id: numericalId,
+					...item,
+					id: variant.u_id,
+					// raw_id: item.raw_id,
 					price: variant.price || null,
 					stats: variant.stats || null,
 					durability: variant.durability || null,
 					quality: v,
 				})
-				this.innerId++
+				// console.log({
+				// 	name: newItem.name,
+				// 	quality: newItem.quality,
+				// 	id: newItem.id,
+				// 	newItem,
+				// })
+
 				this.gameItemsData.push(newItem)
 			})
 		})
+		// console.log(this.gameItemsData)
 	}
 
 	getItem(id) {

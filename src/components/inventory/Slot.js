@@ -43,10 +43,12 @@ export class Slot {
 			if (this.item.draw) {
 				this.item.draw(ctx, this.x + 5, this.y + 5, this.width - 10)
 
-				// Mostrar la cantidad del ítem
-				ctx.fillStyle = 'lightgreen'
-				ctx.font = '14px Arial'
-				ctx.fillText(this.quantity, this.x + 5, this.y + this.height - 5)
+				if (!this.item.isFixed) {
+					// Mostrar la cantidad del ítem
+					ctx.fillStyle = 'lightgreen'
+					ctx.font = '14px Arial'
+					ctx.fillText(this.quantity, this.x + 5, this.y + this.height - 5)
+				}
 			}
 		}
 	}

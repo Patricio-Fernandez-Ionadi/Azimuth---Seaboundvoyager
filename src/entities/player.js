@@ -152,13 +152,13 @@ export class Player {
 	/* Load */
 	init() {
 		const initialInventory = [
-			this.game.itemsManager.getItem(61), // Carne de res
-			this.game.itemsManager.getItem(12), // Gold Key
-			this.game.itemsManager.getItem(71), // Puñal
+			this.game.itemsManager.getItem(111), // Carne de res
+			this.game.itemsManager.getItem(712), // Gold Key
+			this.game.itemsManager.getItem(1301), // Puñal
 		]
-		this.inventory.addItem(initialInventory[0], 10)
-		this.inventory.addItem(initialInventory[1], 1)
-		this.inventory.addItem(initialInventory[2], 1)
+		this.inventory.addItem(initialInventory[0], 10, this)
+		this.inventory.addItem(initialInventory[1], 1, this)
+		this.inventory.addItem(initialInventory[2], 1, this)
 
 		this.eventSystem.on('colliding', ({ side, object }) => {
 			if (side) {

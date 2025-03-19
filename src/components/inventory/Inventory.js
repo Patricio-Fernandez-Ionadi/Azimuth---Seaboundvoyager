@@ -1,4 +1,5 @@
 import { Player } from '../../entities/player.js'
+import { Item } from '../items/Item.js'
 import { Text } from '../Text.js'
 import { Slot } from './Slot.js'
 
@@ -175,28 +176,27 @@ export class Inventory {
 	buyItem(slot) {
 		const item = slot.item
 		if (!item) return
-		let itemAdded
-
 		const price = item.price.buy
 		const player = this.owner.game.player
+		let isFixedItem = false
+
+		this.owner.shop.conf.defaultItems.forEach((di) => {
+			if (di.id === item.id && di.isFixed) {
+				isFixedItem = true
+			}
+		})
 
 		if (player.resources.gold >= price) {
 			player.resources.gold -= price
-			itemAdded = player.inventory.addItem(item, 1)
+			const bougthItem = new Item({ ...item, isFixed: false })
+			player.inventory.addItem(bougthItem, 1, player)
 
-			if (itemAdded) {
-				// Verificar si el ítem es fijo o limitado
-				if (!item.isFixed) {
-					slot.removeItem(1) // Reducir cantidad
-					if (slot.quantity <= 0) {
-						slot.item = null
-					}
-				}
-
-				console.log(`Comprado: ${item.name}`)
-			} else {
-				console.log(`No Comprado: ${itemAdded}`)
+			// Verificar si el ítem es fijo o limitado
+			if (!item.isFixed) {
+				slot.removeItem(1) // Reducir cantidad
+				if (slot.quantity <= 0 && !isFixedItem) slot.item = null
 			}
+			console.log(`Comprado: ${item.name}`)
 		} else {
 			console.warn('No tienes suficiente oro para comprar este ítem')
 		}

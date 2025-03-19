@@ -56,9 +56,10 @@ export default [
 			categories: ['consumible', 'contraband', 'weapon', 'pirate'],
 			restockTimes: [6, 18],
 			defaultItems: [
-				{ id: 61, quantity: 1, isFixed: true },
-				{ id: 83, quantity: 1, isFixed: true },
-				{ id: 12, quantity: 3, isFixed: false },
+				{ id: 111, quantity: 1, isFixed: true },
+				{ id: 13, quantity: 1, isFixed: true },
+				{ id: 23, quantity: 1, isFixed: false },
+				{ id: 301, quantity: 3, isFixed: false },
 			],
 			randomItems: {
 				categories: ['consumible', 'contraband', 'weapon', 'pirate'],

@@ -22,7 +22,7 @@ export class Shop {
 			const itemData = this.owner.game.itemsManager.getItem(defaultItem.id)
 			if (itemData) {
 				itemData.isFixed = defaultItem.isFixed
-				this.inventory.addItem(itemData, defaultItem.quantity)
+				this.inventory.addItem(itemData, defaultItem.quantity, this.owner)
 				slotsOccupied += 1
 			}
 		})
@@ -44,7 +44,7 @@ export class Shop {
 					? Math.floor(Math.random() * 20) + 1
 					: 1
 
-				const { newSlot } = this.inventory.addItem(item, quantity)
+				const { newSlot } = this.inventory.addItem(item, quantity, this.owner)
 				if (newSlot) slotsOccupied += 1
 
 				if (this.conf.itemRules?.limitedItems?.includes(item.id)) {

@@ -65,7 +65,7 @@ export class PuertoValerisScene {
 			mockStructure(ctx, this.camera, c)
 			const side = checkCollisions(this.game.player, c)
 			if (side) {
-				this.eventSystem.emit('stopPlayerMotion', { side, object: c })
+				this.eventSystem.emit('colliding', { side, object: c })
 
 				// collisionando con la puerta
 				if (side === 'top' && c.id === 2) {
@@ -106,8 +106,8 @@ export class PuertoValerisScene {
 
 		this.game.player.draw(ctx, this.camera)
 
-		// mostrar boton de mapa cuando el inventario esta cerrado
-		if (!this.game.player.inventory.isOpen) this.map_button.draw(ctx)
+		// Ocultar con menu abierto
+		if (!this.game.player.menuGame.isOpen) this.map_button.draw(ctx)
 
 		// Renderizar diálogo activo
 		this.dialogManager.renderDialogBox()
@@ -188,8 +188,8 @@ export class PuertoValerisScene {
 
 		// Agregamos objetos colisionables por el jugador
 		this.npcs.forEach((npc) => this.collisions.push(npc))
-		// this.collisions.push(building)
-		// this.collisions.push(door)
+		this.collisions.push(building)
+		this.collisions.push(door)
 
 		/* Suscripcion a eventos */
 		this.eventSystem.on('npcInteracted', (npc) => {
@@ -204,9 +204,8 @@ export class PuertoValerisScene {
 	}
 	onEnter() {
 		// Configurar la cámara para seguir al jugador
-		if (this.game.player && this.camera.target !== this.game.player) {
+		if (this.game.player && this.camera.target !== this.game.player)
 			this.camera.setTarget(this.game.player)
-		}
 
 		this.map_button = new Button(
 			this.game.width - 70,
@@ -218,34 +217,26 @@ export class PuertoValerisScene {
 			5,
 			32
 		)
-		this.map_button.onClick = () => {
+		this.map_button.onClick = () =>
 			this.game.sceneManager.changeScene(SCENES.map)
-		}
 	}
 	onExit() {}
 
 	/* Events */
 	handleClick(mouseX, mouseY, e) {
-		if (!this.game.player.inventory.isOpen) {
+		if (!this.game.player.menuGame.isOpen)
 			this.map_button.handleClick(mouseX, mouseY, e)
-		}
 	}
 	mouseDown(mouseX, mouseY, e) {
-		if (this.tradeWindow) {
-			this.tradeWindow.mouseDown(mouseX, mouseY, e)
-		}
+		if (this.tradeWindow) this.tradeWindow.mouseDown(mouseX, mouseY, e)
 	}
 	mouseMove(mouseX, mouseY, e) {
-		if (!this.game.player.inventory.isOpen) {
+		if (!this.game.player.menuGame.isOpen)
 			this.map_button.handleHover(mouseX, mouseY, e)
-		}
-		if (this.tradeWindow) {
-			this.tradeWindow.mouseMove(mouseX, mouseY, e)
-		}
+
+		if (this.tradeWindow) this.tradeWindow.mouseMove(mouseX, mouseY, e)
 	}
 	mouseUp(mouseX, mouseY, e) {
-		if (this.tradeWindow) {
-			this.tradeWindow.mouseUp(mouseX, mouseY, e)
-		}
+		if (this.tradeWindow) this.tradeWindow.mouseUp(mouseX, mouseY, e)
 	}
 }

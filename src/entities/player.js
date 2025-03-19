@@ -1,9 +1,11 @@
+import { MenuGame } from '../components/menugame/MenuGame.js'
 import { Inventory } from '../components/inventory/Inventory.js'
 
 export class Player {
 	constructor(x, y, game) {
 		this.game = game
 		this.eventSystem = this.game.eventSystem
+		this.c = this.game.ctx
 		this.x = x
 		this.y = y
 		this.width = 32
@@ -20,8 +22,10 @@ export class Player {
 		// this.hunger = 0
 		// this.drunk = 0
 
-		// Inventario
 		this.inventory = new Inventory(this, 435, 20, false, 10)
+
+		this.menuGame = new MenuGame(this)
+		this.selectedTab = this.menuGame.defaultSelected
 
 		this.reputation = {
 			pirates: 0,
@@ -43,25 +47,42 @@ export class Player {
 	}
 
 	update() {
-		this.updateInputs()
-		this.horizontalMovement()
-		this.verticalMovemet()
-
-		// Abrir/Cerrar inventario
-		if (this.game.keyboard.onPress.tab && !this.keyPressed) {
-			this.keyPressed = true
-			this.inventory.isOpen = !this.inventory.isOpen
-		}
-
 		this.y += this.velocity.y
 		this.x += this.velocity.x
+		this.updateInputs()
+
+		if (
+			!this.menuGame.isOpen &&
+			!this.inventory.tradeMode &&
+			!this.interactionRequired
+		) {
+			this.horizontalMovement()
+			this.verticalMovemet()
+		}
+
+		// Abrir/Cerrar menu
+		if (
+			this.game.keyboard.onPress.tab &&
+			!this.keyPressed &&
+			!this.inventory.tradeMode
+		) {
+			this.keyPressed = true
+			this.eventSystem.emit('toggle_menugame')
+		}
 	}
 
-	draw(ctx, camera) {
-		ctx.fillStyle = this.color
-		ctx.fillRect(this.x - camera.x, this.y - camera.y, this.width, this.height)
+	draw() {
+		const camera = this.game.sceneManager.activeScene.camera
 
-		this.inventory.isOpen && this.inventory.draw(ctx)
+		this.c.fillStyle = this.color
+		this.c.fillRect(
+			this.x - camera.x,
+			this.y - camera.y,
+			this.width,
+			this.height
+		)
+
+		this.menuGame.render()
 	}
 
 	/* Movement */
@@ -92,16 +113,23 @@ export class Player {
 
 	/* Events */
 	mouseUp(mouseX, mouseY, e) {
+		if (this.menuGame.isOpen) {
+			this.menuGame.mouseUp(mouseX, mouseY, e)
+		}
 		this.inventory.mouseUp(mouseX, mouseY, e)
 	}
 	mouseDown(mouseX, mouseY, e) {
 		this.inventory.mouseDown(mouseX, mouseY, e)
+		this.menuGame.mouseDown(mouseX, mouseY, e)
 	}
 
 	mouseMove(mouseX, mouseY, e) {
+		if (this.menuGame.isOpen) {
+			this.menuGame.mouseMove(mouseX, mouseY, e)
+		}
 		this.inventory.mouseMove(mouseX, mouseY, e)
 	}
-	handleClick(mouseX, mouseY, e) {}
+
 	updateInputs() {
 		this.direction = {
 			left: this.game.keyboard.onPress.a,
@@ -127,7 +155,7 @@ export class Player {
 		this.inventory.addItem(initialInventory[1], 1)
 		this.inventory.addItem(initialInventory[2], 1)
 
-		this.eventSystem.on('stopPlayerMotion', ({ side, object }) => {
+		this.eventSystem.on('colliding', ({ side, object }) => {
 			if (side) {
 				// left
 				if (this.velocity.x < 0 && side === 'left') {
@@ -156,6 +184,9 @@ export class Player {
 					this.velocity.y = 0
 					this.y = object.y - this.height
 				}
+			} else {
+				this.velocity.x = 0
+				this.velocity.y = 0
 			}
 		})
 	}

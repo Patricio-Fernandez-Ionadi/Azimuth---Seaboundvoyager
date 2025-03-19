@@ -191,6 +191,7 @@ export class Keyboard {
 					this.lastKey.pressed = 'RELEASE Tab'
 					this.pressed = false
 					this.onPress.tab = false
+					break
 				case 'Shift':
 					this.lastKey.pressed = 'RELEASE Shift'
 					this.pressed = false

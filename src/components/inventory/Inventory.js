@@ -1,11 +1,11 @@
 import { Player } from '../../entities/player.js'
-import { Item } from '../items/Item.js'
 import { Text } from '../Text.js'
 import { Slot } from './Slot.js'
 
 export class Inventory {
 	constructor(owner, x, y, isNPC = true, rows, cols) {
 		this.owner = owner
+		this.game = this.owner.game
 		this.x = x
 		this.y = y
 		this.rows = rows || 8
@@ -34,34 +34,21 @@ export class Inventory {
 		this.#createGrid()
 	}
 
-	draw(ctx) {
+	draw() {
+		const { ctx } = this.game
 		this.renderSlots(ctx)
+		this.renderItemDragging(ctx)
 	}
 
 	/* ###### Events ###### */
-	mouseDown(mouseX, mouseY) {
-		for (let row = 0; row < this.rows; row++) {
-			for (let col = 0; col < this.cols; col++) {
-				const slot = this.slots[row][col]
-				if (slot.handleClick(mouseX, mouseY)) {
-					if (this.isNPC && slot.item) {
-						// Si es un inventario de NPC, intentar comprar el ítem
-						this.buyItem(slot)
-					} else {
-						// Si es un inventario normal, iniciar el arrastre
-						this.pickItem(mouseX, mouseY)
-					}
-					return true
-				}
-			}
-		}
-		return false
+	mouseDown(mouseX, mouseY, e) {
+		this.handleItemActionOnClick(mouseX, mouseY)
 	}
 	mouseMove(mouseX, mouseY, e) {
 		this.hoverSlot(mouseX, mouseY)
 	}
-	mouseUp(mouseX, mouseY) {
-		if (this.draggedItem) this.dropItem(mouseX, mouseY)
+	mouseUp(mouseX, mouseY, e) {
+		if (this.draggedItem) this.dropPickedItem(mouseX, mouseY)
 	}
 	/* #################### */
 	/* Load */
@@ -77,7 +64,6 @@ export class Inventory {
 			}
 		}
 	}
-
 	setGrid(rows, cols) {
 		this.rows = rows
 		this.cols = cols
@@ -102,7 +88,137 @@ export class Inventory {
 		}
 	}
 
+	// mouse down
+	handleItemActionOnClick(mouseX, mouseY) {
+		for (let row = 0; row < this.rows; row++) {
+			for (let col = 0; col < this.cols; col++) {
+				const slot = this.slots[row][col]
+				if (slot.handleClick(mouseX, mouseY)) {
+					if (this.isNPC && slot.item) {
+						// Si es un inventario de NPC, intentar comprar el ítem
+						this.owner.shop.buyItem(slot)
+					} else {
+						// Si es un inventario normal, iniciar el arrastre
+						this.dragPickedItem(mouseX, mouseY)
+					}
+					return true
+				}
+			}
+		}
+		return false
+	}
+	dragPickedItem(mouseX, mouseY) {
+		for (let row = 0; row < this.rows; row++) {
+			for (let col = 0; col < this.cols; col++) {
+				const slot = this.slots[row][col]
+				if (slot.handleClick(mouseX, mouseY)) {
+					if (slot.item) {
+						// Guardar el ítem arrastrado
+						this.draggedItem = slot.item // item del slot
+						this.draggedFromSlot = slot // desde que slot se interactua
+						this.draggedQuantity = slot.quantity // Guardar la cantidad
+						slot.removeItem(slot.quantity) // Quitar el ítem del slot
+					}
+					return
+				}
+			}
+		}
+	}
+	// mouse move
+	hoverSlot(mouseX, mouseY) {
+		let hovered = false
+		for (let row = 0; row < this.rows; row++) {
+			for (let col = 0; col < this.cols; col++) {
+				const slot = this.slots[row][col]
+				if (slot.mouseMove(mouseX, mouseY)) {
+					this.hoveredSlot = slot
+					hovered = true
+				}
+			}
+		}
+		if (!hovered) this.hoveredSlot = null
+	}
+	// mouse up
+	dropPickedItem(mouseX, mouseY) {
+		let placed = false
+
+		// Intentar colocar el ítem en un slot válido
+		for (let row = 0; row < this.rows; row++) {
+			for (let col = 0; col < this.cols; col++) {
+				const slot = this.slots[row][col]
+				if (slot.handleClick(mouseX, mouseY)) {
+					// Intentar colocar el ítem en el slot
+					if (!slot.item || slot.item.id === this.draggedItem.id) {
+						slot.addItem(this.draggedItem, this.draggedQuantity)
+						placed = true
+						break
+					}
+				}
+			}
+		}
+		if (!placed) {
+			if (this.tradeMode) {
+				// En modo de comercio, intentar vender el ítem
+				if (this.owner instanceof Player && this.draggedItem?.price) {
+					const sellPrice = this.draggedItem.price.sell * this.draggedQuantity
+					this.owner.resources.gold += sellPrice
+					console.log(
+						`Vendido: ${this.draggedItem.name} x${this.draggedQuantity}`
+					)
+				} else {
+					console.warn('El ítem no tiene precio o no se puede vender')
+				}
+			} else {
+				// Fuera del modo de comercio, verificar si el ítem se eliminó
+				if (this.x > mouseX) {
+					console.log('Ítem eliminado: se soltó fuera del inventario')
+					// No devolver el ítem al slot original ni hacer nada más
+				} else {
+					// Si no se soltó fuera, devolverlo al slot original
+					if (this.draggedFromSlot) {
+						this.draggedFromSlot.addItem(this.draggedItem, this.draggedQuantity)
+					}
+				}
+			}
+		}
+		// Limpiar el estado de drag and drop
+		this.draggedItem = null
+		this.draggedFromSlot = null
+		this.draggedQuantity = 0
+	}
+
+	addItem(item, quantity = 1) {
+		for (let row of this.slots) {
+			for (let slot of row) {
+				let canStack =
+					slot.item?.id === item?.id &&
+					slot.item?.stackeable &&
+					slot.quantity + quantity <= slot.item?.maxStack
+
+				if (!slot.item) {
+					// Si el slot está vacío, agregar el ítem
+					slot.addItem(item, quantity)
+					return { newSlot: true }
+				} else if (canStack) {
+					// Si el ítem es apilable y cabe en el slot, incrementar la cantidad
+					slot.quantity += quantity
+					return { newSlot: false }
+				}
+			}
+		}
+		console.warn('Inventario lleno: No hay espacio para agregar el ítem.')
+		return false
+	}
+
 	/* Render */
+	renderItemDragging(ctx) {
+		// Dibujar el ítem arrastrado si existe
+		if (this.draggedItem) {
+			const { x: mouseX, y: mouseY } = this.owner.game.customCursor.position
+			this.draggedItem.draw(ctx, mouseX - 13, mouseY - 13, this.slotSize)
+		}
+	}
+
 	renderSlots(ctx) {
 		for (let row = 0; row < this.rows; row++) {
 			for (let col = 0; col < this.cols; col++) {
@@ -112,12 +228,6 @@ export class Inventory {
 		// Dibujar tooltip si hay un slot con hover
 		if (this.hoveredSlot && this.hoveredSlot.item) {
 			this.drawTooltip(ctx, this.hoveredSlot.item)
-		}
-
-		// Dibujar el ítem arrastrado si existe
-		if (this.draggedItem) {
-			const { x: mouseX, y: mouseY } = this.owner.game.customCursor.position
-			this.draggedItem.draw(ctx, mouseX - 13, mouseY - 13, this.slotSize)
 		}
 	}
 	drawTooltip(ctx, item) {
@@ -171,133 +281,5 @@ export class Inventory {
 		ctx.fillRect(tooltipX, tooltipY, width, height)
 
 		info.forEach((e) => Text({ x, size, ctx, ...e }))
-	}
-
-	buyItem(slot) {
-		const item = slot.item
-		if (!item) return
-		const price = item.price.buy
-		const player = this.owner.game.player
-		let isFixedItem = false
-
-		this.owner.shop.conf.defaultItems.forEach((di) => {
-			if (di.id === item.id && di.isFixed) {
-				isFixedItem = true
-			}
-		})
-
-		if (player.resources.gold >= price) {
-			player.resources.gold -= price
-			const bougthItem = new Item({ ...item, isFixed: false })
-			player.inventory.addItem(bougthItem, 1, player)
-
-			// Verificar si el ítem es fijo o limitado
-			if (!item.isFixed) {
-				slot.removeItem(1) // Reducir cantidad
-				if (slot.quantity <= 0 && !isFixedItem) slot.item = null
-			}
-			console.log(`Comprado: ${item.name}`)
-		} else {
-			console.warn('No tienes suficiente oro para comprar este ítem')
-		}
-	}
-	addItem(item, quantity = 1) {
-		for (let row of this.slots) {
-			for (let slot of row) {
-				let canStack =
-					slot.item?.id === item?.id &&
-					slot.item?.stackeable &&
-					slot.quantity + quantity <= slot.item?.maxStack
-
-				if (!slot.item) {
-					// Si el slot está vacío, agregar el ítem
-					slot.addItem(item, quantity)
-					return { newSlot: true }
-				} else if (canStack) {
-					// Si el ítem es apilable y cabe en el slot, incrementar la cantidad
-					slot.quantity += quantity
-					return { newSlot: false }
-				}
-			}
-		}
-		console.warn('Inventario lleno: No hay espacio para agregar el ítem.')
-		return false
-	}
-	dropItem(mouseX, mouseY) {
-		let placed = false
-
-		// Intentar colocar el ítem en un slot válido
-		for (let row = 0; row < this.rows; row++) {
-			for (let col = 0; col < this.cols; col++) {
-				const slot = this.slots[row][col]
-				if (slot.handleClick(mouseX, mouseY)) {
-					// Intentar colocar el ítem en el slot
-					if (!slot.item || slot.item.id === this.draggedItem.id) {
-						slot.addItem(this.draggedItem, this.draggedQuantity)
-						placed = true
-						break
-					}
-				}
-			}
-		}
-		if (!placed) {
-			if (this.tradeMode) {
-				// En modo de comercio, intentar vender el ítem
-				if (this.owner instanceof Player && this.draggedItem?.price) {
-					const sellPrice = this.draggedItem.price.sell * this.draggedQuantity
-					this.owner.resources.gold += sellPrice
-					console.log(
-						`Vendido: ${this.draggedItem.name} x${this.draggedQuantity}`
-					)
-				} else {
-					console.warn('El ítem no tiene precio o no se puede vender')
-				}
-			} else {
-				// Fuera del modo de comercio, verificar si el ítem se eliminó
-				if (this.x > mouseX) {
-					console.log('Ítem eliminado: se soltó fuera del inventario')
-					// No devolver el ítem al slot original ni hacer nada más
-				} else {
-					// Si no se soltó fuera, devolverlo al slot original
-					if (this.draggedFromSlot) {
-						this.draggedFromSlot.addItem(this.draggedItem, this.draggedQuantity)
-					}
-				}
-			}
-		}
-		// Limpiar el estado de drag and drop
-		this.draggedItem = null
-		this.draggedFromSlot = null
-		this.draggedQuantity = 0
-	}
-	pickItem(mouseX, mouseY) {
-		for (let row = 0; row < this.rows; row++) {
-			for (let col = 0; col < this.cols; col++) {
-				const slot = this.slots[row][col]
-				if (slot.handleClick(mouseX, mouseY)) {
-					if (slot.item) {
-						// Guardar el ítem arrastrado
-						this.draggedItem = slot.item // item del slot
-						this.draggedFromSlot = slot // desde que slot se interactua
-						this.draggedQuantity = slot.quantity // Guardar la cantidad
-						slot.removeItem(slot.quantity) // Quitar el ítem del slot
-					}
-					return
-				}
-			}
-		}
-	}
-	hoverSlot(mouseX, mouseY) {
-		let hovered = false
-		for (let row = 0; row < this.rows; row++) {
-			for (let col = 0; col < this.cols; col++) {
-				const slot = this.slots[row][col]
-				if (slot.mouseMove(mouseX, mouseY)) {
-					this.hoveredSlot = slot
-					hovered = true
-				}
-			}
-		}
-		if (!hovered) this.hoveredSlot = null
 	}
 }

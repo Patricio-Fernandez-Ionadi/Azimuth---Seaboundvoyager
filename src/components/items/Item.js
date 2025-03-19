@@ -2,18 +2,9 @@ import { loadImage } from '../../core/utils.js'
 
 export class Item {
 	constructor(itemData) {
-		this.id = itemData.id
-		this.name = itemData.name
-		this.description = itemData.description
-		this.categories = itemData.categories
-		this.variant = itemData.variant
-		this.src = itemData.src
-		this.stackeable = itemData.stackeable
-		this.price = itemData.price
-		this.stats = itemData.stats
-		this.durability = itemData.durability
-		this.quality = itemData.quality
-		this.maxStack = itemData.maxStack
+		Object.keys(itemData).forEach((val) => {
+			this[val] = itemData[val]
+		})
 
 		this.loaded = false
 		loadImage(this.src).then((res) => {

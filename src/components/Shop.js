@@ -20,40 +20,29 @@ export class Shop {
 
 	initializeInventory() {
 		const maxItems = 12
+		let slotsOccupied = 0
 
-		for (let i = 0; i < maxItems; i++) {
-			const [item] = this.owner.game.itemsManager.getRandomItem({
+		while (slotsOccupied < maxItems) {
+			// Obtener un ítem aleatorio
+			const item = this.owner.game.itemsManager.getRandomItem({
 				categories: this.categories,
 				qualities: this.qualities,
 				probabilities: { common: 0.7, rare: 0.3 },
 				exclusions: this.exclusions,
 			})
 
-			if (item.price) {
-				let quantity = 1
-				if (item.stackeable) {
-					quantity = Math.floor(Math.random() * 20) + 1 // >1 <20
-				}
-				this.inventory.addItem(item, quantity)
+			if (item && item.price.buy > 0) {
+				// Aplicar probabilidades?
+				// console.log(item)
+
+				const quantity = item.stackeable
+					? Math.floor(Math.random() * 20) + 1
+					: 1
+
+				const { newSlot } = this.inventory.addItem(item, quantity)
+				if (newSlot) slotsOccupied += 1
 			}
 		}
-
-		// const items = this.owner.game.itemsManager.getRandomItems(maxItems, {
-		// 	categories: this.categories,
-		// 	qualities: this.qualities,
-		// 	probabilities: { common: 0.7, rare: 0.3 },
-		// 	exclusions: this.exclusions,
-		// })
-
-		// items.forEach((item) => {
-		// 	if (item.price) {
-		// 		let quantity = 1
-		// 		if (item.stackeable) {
-		// 			quantity = Math.floor(Math.random() * 20) + 1 // >1 <20
-		// 		}
-		// 		this.inventory.addItem(item, quantity)
-		// 	}
-		// })
 	}
 
 	checkRestock(currentHour) {

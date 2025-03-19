@@ -145,7 +145,7 @@ export class Inventory {
 			{
 				label: quality,
 				color:
-					quality === 'exelent'
+					quality === 'excellent'
 						? 'lightgreen'
 						: quality === 'rare'
 						? 'violet'
@@ -188,36 +188,12 @@ export class Inventory {
 		}
 	}
 	addItem(item, quantity = 1) {
-		/* for (let row = 0; row < this.rows; row++) {
-			for (let col = 0; col < this.cols; col++) {
-				const slot = this.slots[row][col]
-				if (!slot.item || slot.item.id === item.id) {
-					// Stackear el ítem si es del mismo tipo
-					slot.addItem(item, quantity)
-					return true
-				}
-			}
-		}
-
-		// Si no se puede stackear, buscar el primer slot vacío
-		for (let row = 0; row < this.rows; row++) {
-			for (let col = 0; col < this.cols; col++) {
-				const slot = this.slots[row][col]
-				if (!slot.item) {
-					slot.addItem(item, quantity)
-					return true
-				}
-			}
-		}
-
-		console.warn('Inventario lleno')
-		return false */
 		for (let row of this.slots) {
 			for (let slot of row) {
 				if (!slot.item) {
 					// Si el slot está vacío, agregar el ítem
 					slot.addItem(item, quantity)
-					return true
+					return { newSlot: true }
 				} else if (
 					slot.item.id === item.id &&
 					slot.item.stackeable &&
@@ -225,7 +201,7 @@ export class Inventory {
 				) {
 					// Si el ítem es apilable y cabe en el slot, incrementar la cantidad
 					slot.quantity += quantity
-					return true
+					return { newSlot: false }
 				}
 			}
 		}

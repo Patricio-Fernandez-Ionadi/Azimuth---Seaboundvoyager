@@ -8,16 +8,30 @@ export class ItemsManager {
 	}
 	init() {
 		this.gameItemsData = []
-		this.commons = []
 		this.innerId = 1
 		ITEMS_DATA.forEach((i) => {
+			// Validar que el ítem tenga las propiedades necesarias
+			if (!i || !i.variant || typeof i.variant !== 'object') {
+				console.warn('Ítem inválido, saltando:', i)
+				return
+			}
+
 			Object.keys(i.variant).forEach((v) => {
+				const variant = i.variant[v]
+				if (!variant) {
+					console.warn(`Variante '${v}' inválida para el ítem:`, i)
+					return
+				}
+
+				// Generar un ID único basado en el nombre del ítem y su calidad
+				const numericalId = this.innerId
+
 				const newItem = new Item({
 					...i,
-					id: this.innerId,
-					price: i.variant[v].price || null,
-					stats: i.variant[v].stats || null,
-					durability: i.variant[v].durability || null,
+					id: numericalId,
+					price: variant.price || null,
+					stats: variant.stats || null,
+					durability: variant.durability || null,
 					quality: v,
 				})
 				this.innerId++
@@ -36,7 +50,7 @@ export class ItemsManager {
 		return new Item(itemData)
 	}
 
-	getItemsByIncludedCategories(categories, items) {
+	getItemsByIncludedCategories(categories, items = null) {
 		if (items) {
 			return items.filter((item) =>
 				categories.some((cat) => item.categories.includes(cat))
@@ -58,7 +72,7 @@ export class ItemsManager {
 			)
 		}
 	}
-	getFilteredItems(categories, exclude, items = null) {
+	getFilteredItems(categories, exclusions, items = null) {
 		// Obtener ítems que coincidan con las categorías incluidas
 		const itemsMatchingCategories = this.getItemsByIncludedCategories(
 			categories,
@@ -67,7 +81,7 @@ export class ItemsManager {
 
 		// Excluir ítems que pertenezcan a las categorías excluidas
 		const filteredItems = this.excludeItemsByCategories(
-			exclude,
+			exclusions,
 			itemsMatchingCategories
 		)
 
@@ -75,116 +89,57 @@ export class ItemsManager {
 		return filteredItems
 	}
 
-	getByCategory(category, exclude = [], items) {
+	getByQuality(qualities, items) {
+		const allQualities = ['common', 'rare', 'excellent'] // Calidades disponibles
+
+		let qualitiesToFilter = allQualities
+
+		if (qualities && qualities.length > 0) {
+			qualitiesToFilter = qualities // uso de qualities especificas
+		}
+
 		if (items) {
-			if (Array.isArray(category)) {
-				return items.filter((item) => {
-					const matchesInclude = category.some((cat) =>
-						item.categories.includes(cat)
-					)
-					const matchesExclude = exclude.every(
-						(cat) => !item.categories.includes(cat)
-					)
-					return matchesInclude && matchesExclude
-				})
-			}
-
-			if (typeof category === 'string') {
-				return items.filter(
-					(item) =>
-						item.categories.includes(category) &&
-						!exclude.every((cat) => item.categories.includes(cat))
-				)
-			}
-
-			console.warn('Categoría inválida en array de items:', category)
-			return []
+			return items.filter((item) => qualitiesToFilter.includes(item.quality))
 		} else {
-			if (Array.isArray(category)) {
-				return this.gameItemsData.filter((item) => {
-					const matchesInclude = category.some((cat) =>
-						item.categories.includes(cat)
-					)
-					const matchesExclude = exclude.every(
-						(cat) => !item.categories.includes(cat)
-					)
-					return matchesInclude && matchesExclude
-				})
-			}
-
-			if (typeof category === 'string') {
-				return this.gameItemsData.filter(
-					(item) =>
-						item.categories.includes(category) &&
-						!exclude.every((cat) => item.categories.includes(cat))
-				)
-			}
-
-			console.warn('Categoría inválida en el juego:', category)
-			return []
-		}
-	}
-	getByQuality(qualities, probabilities = {}) {
-		if (Array.isArray(qualities)) {
-			const filteredItems = this.gameItemsData.filter((item) =>
-				qualities.includes(item.quality)
+			return this.gameItemsData.filter((item) =>
+				qualitiesToFilter.includes(item.quality)
 			)
-
-			// Aplicar probabilidades si se proporcionan
-			if (Object.keys(probabilities).length > 0) {
-				return filteredItems.filter((item) => {
-					const chance = probabilities[item.quality] || 0
-					return Math.random() < chance
-				})
-			}
-
-			return filteredItems
 		}
 
-		if (typeof quality === 'string') {
-			return this.gameItemsData.filter((item) => item.quality === quality)
-		}
+		// // Aplicar probabilidades si se proporcionan
+		// if (Object.keys(probabilities).length > 0) {
+		// 	return filteredItems.filter((item) => {
+		// 		console.log(probabilities[item.quality])
+		// 		const chance = probabilities[item.quality] || 0
+		// 		return Math.random() < chance
+		// 	})
+		// }
 
-		console.warn('Calidad inválida:', quality)
-		return []
+		// console.warn('Calidad inválida:', quality)
+		// return []
 	}
 
 	getRandomItem(config) {
-		const { categories, exclusions, qualities, probabilities } = config
+		const { categories, exclusions, qualities } = config
 
-		const allQualities = ['common', 'rare', 'excellent'] // Calidades disponibles
-		let qualitiesToFilter = allQualities
-		if (qualities.length > 0) {
-			qualitiesToFilter = qualities // uso de qualities especificas
-		}
-		// Obtener objetos del juego con calidades especificadas
-		let filteredItems = this.getByQuality(qualitiesToFilter, probabilities)
+		// obtener categorias disponibles
+		let filteredItems = this.getFilteredItems(categories, exclusions)
 
-		// filtrar categorias y exclusiones
-		filteredItems = this.getFilteredItems(categories, exclusions, filteredItems)
+		// filtrado de calidades
+		filteredItems = this.getByQuality(qualities, filteredItems)
 
 		// Seleccionar ítem aleatorio
-		const result = []
 		const randomIndex = Math.floor(Math.random() * filteredItems.length)
 
 		// Crear una nueva instancia del ítem
 		const newItem = new Item(filteredItems[randomIndex])
-		result.push(newItem)
 
-		// filteredItems.splice(randomIndex, 1) // Evitar duplicados
-
-		return result
+		return newItem
 	}
-	getRandomItems(count, options = {}) {
-		const { categories, exclusions, qualities, probabilities } = options
+	getRandomItems(count, config) {
+		const { categories, exclusions, qualities } = config
 
-		const allQualities = ['common', 'rare', 'excellent'] // Calidades disponibles
-		let qualitiesToFilter = allQualities
-		if (qualities.length > 0) {
-			qualitiesToFilter = qualities // uso de qualities especificas
-		}
-
-		let filteredItems = this.getByQuality(qualitiesToFilter, probabilities)
+		let filteredItems = this.getByQuality(qualities)
 
 		filteredItems = this.getFilteredItems(categories, exclusions, filteredItems)
 

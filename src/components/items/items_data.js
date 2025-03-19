@@ -20,7 +20,7 @@ const stats = {
 const QTY = {
 	common: 'common',
 	rare: 'rare',
-	exelent: 'exelent',
+	excellent: 'excellent',
 	unique: 'unique',
 }
 
@@ -33,7 +33,7 @@ export const ITEMS_DATA = [
 		categories: [CAT.consumible],
 		stackeable: true,
 		variant: {
-			rare: {
+			[QTY.rare]: {
 				price: { buy: 350, sell: 40 },
 			},
 		},
@@ -46,7 +46,7 @@ export const ITEMS_DATA = [
 		categories: [CAT.consumible, CAT.pirate, CAT.contraband],
 		stackeable: false,
 		variant: {
-			common: {
+			[QTY.common]: {
 				price: { buy: 6, sell: 3 },
 			},
 		},
@@ -59,13 +59,13 @@ export const ITEMS_DATA = [
 		categories: [CAT.cartography],
 		stackeable: true,
 		variant: {
-			common: {
+			[QTY.common]: {
 				price: { buy: 50, sell: 40 },
 			},
-			rare: {
+			[QTY.rare]: {
 				price: { buy: 90, sell: 70 },
 			},
-			exelent: {
+			[QTY.excellent]: {
 				price: { buy: 600, sell: 450 },
 			},
 		},
@@ -80,7 +80,7 @@ export const ITEMS_DATA = [
 		requirements: {
 			// hablar con el cartografo en la biblioteca
 		},
-		variant: { unique: {} },
+		variant: { [QTY.unique]: {} },
 	},
 	{
 		maxStack: 99,
@@ -90,15 +90,15 @@ export const ITEMS_DATA = [
 		categories: [CAT.consumible, CAT.contraband, CAT.comercial, CAT.medicine],
 		stackeable: true,
 		variant: {
-			common: {
+			[QTY.common]: {
 				price: { buy: 4, sell: 2 },
 				stats: { hungerRestore: -4, reslience: 10, health: 4 },
 			},
-			rare: {
+			[QTY.rare]: {
 				price: { buy: 7, sell: 5 },
 				stats: { hungerRestore: -2, reslience: 4, health: 0 },
 			},
-			exelant: {
+			[QTY.excellent]: {
 				price: { buy: 12, sell: 6 },
 				stats: { hungerRestore: -10, reslience: 30, health: 10 },
 			},
@@ -112,15 +112,15 @@ export const ITEMS_DATA = [
 		categories: [CAT.food, CAT.consumible],
 		stackeable: true,
 		variant: {
-			common: {
+			[QTY.common]: {
 				price: { buy: 8, sell: 5 },
 				stats: { hungerRestore: 20 },
 			},
-			rare: {
+			[QTY.rare]: {
 				price: { buy: 8, sell: 2 },
 				stats: { hungerRestore: 15, health: -10 },
 			},
-			exelent: {
+			[QTY.excellent]: {
 				price: { buy: 35, sell: 8 },
 				stats: { hungerRestore: 35, health: 20, reslience: 30 },
 			},
@@ -134,17 +134,17 @@ export const ITEMS_DATA = [
 		categories: [CAT.weapon],
 		stackeable: false,
 		variant: {
-			common: {
+			[QTY.common]: {
 				price: { buy: 22, sell: 18 },
 				stats: { damage: 15 },
 				durability: 200,
 			},
-			rare: {
+			[QTY.rare]: {
 				price: { buy: 54, sell: 38 },
 				stats: { damage: 32 },
 				durability: 400,
 			},
-			exelent: {
+			[QTY.excellent]: {
 				price: { buy: 120, sell: 62 },
 				stats: { damage: 50 },
 				durability: 1200,
@@ -160,15 +160,15 @@ export const ITEMS_DATA = [
 		type: 'container',
 		stackeable: false,
 		variant: {
-			common: {
+			[QTY.common]: {
 				price: { buy: 60, sell: 40 },
 				size: [5, 5],
 			},
-			rare: {
+			[QTY.rare]: {
 				price: { buy: 80, sell: 59 },
 				size: [8, 8],
 			},
-			exelent: {
+			[QTY.excellent]: {
 				price: { buy: 160, sell: 80 },
 				size: [8, 12],
 			},
@@ -182,11 +182,11 @@ export const ITEMS_DATA = [
 		categories: [CAT.consumible, CAT.comercial],
 		stackeable: false,
 		variant: {
-			rare: {
+			[QTY.rare]: {
 				price: { buy: 700, sell: 500 },
 				stats: { reslience: 30 },
 			},
-			exelent: {
+			[QTY.excellent]: {
 				price: { buy: null, sell: 1200 },
 				stats: { reslience: 60 },
 			},

@@ -11,7 +11,6 @@ export class Inventory {
 		this.cols = cols || 8
 		this.slotSize = 40
 		this.hoveredSlot = null // Slot en hover
-		this.isOpen = false
 		this.width = this.rows * this.slotSize
 		this.height = this.cols * this.slotSize
 
@@ -40,7 +39,6 @@ export class Inventory {
 
 	/* ###### Events ###### */
 	mouseDown(mouseX, mouseY) {
-		// if (this.tradeMode) {
 		for (let row = 0; row < this.rows; row++) {
 			for (let col = 0; col < this.cols; col++) {
 				const slot = this.slots[row][col]
@@ -57,10 +55,8 @@ export class Inventory {
 			}
 		}
 		return false
-		// }
 	}
 	mouseMove(mouseX, mouseY, e) {
-		if (!this.isOpen) return
 		this.hoverSlot(mouseX, mouseY)
 	}
 	mouseUp(mouseX, mouseY) {
@@ -81,9 +77,32 @@ export class Inventory {
 		}
 	}
 
+	setGrid(rows, cols) {
+		this.rows = rows
+		this.cols = cols
+
+		// Si no hay slots creados, crear una nueva cuadrícula
+		if (!this.slots || this.slots.length === 0) {
+			this.#createGrid(rows, cols)
+			return
+		}
+
+		// Reposicionar los slots existentes
+		for (let row = 0; row < rows; row++) {
+			for (let col = 0; col < cols; col++) {
+				const slot = this.slots[row]?.[col]
+				if (slot) {
+					slot.x = this.x + col * this.slotSize
+					slot.y = this.y + row * this.slotSize
+					slot.width = this.slotSize
+					slot.height = this.slotSize
+				}
+			}
+		}
+	}
+
 	/* Render */
 	renderSlots(ctx) {
-		// console.log(this)
 		for (let row = 0; row < this.rows; row++) {
 			for (let col = 0; col < this.cols; col++) {
 				this.slots[row][col].draw(ctx)
@@ -96,7 +115,7 @@ export class Inventory {
 
 		// Dibujar el ítem arrastrado si existe
 		if (this.draggedItem) {
-			const { mouseX, mouseY } = this.owner.game.input
+			const { x: mouseX, y: mouseY } = this.owner.game.customCursor.position
 			this.draggedItem.draw(ctx, mouseX - 13, mouseY - 13, this.slotSize)
 		}
 	}
@@ -243,8 +262,6 @@ export class Inventory {
 					console.warn('El ítem no tiene precio o no se puede vender')
 				}
 			} else {
-				console.log(this.x)
-				console.log(mouseX)
 				// Fuera del modo de comercio, verificar si el ítem se eliminó
 				if (this.x > mouseX) {
 					console.log('Ítem eliminado: se soltó fuera del inventario')

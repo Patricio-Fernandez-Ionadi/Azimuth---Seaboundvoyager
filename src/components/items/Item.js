@@ -2,7 +2,7 @@ import { loadImage } from '../../core/utils.js'
 
 export class Item {
 	constructor(itemData) {
-		this.id = itemData.id || Date.now()
+		this.id = itemData.id
 		this.name = itemData.name
 		this.description = itemData.description
 		this.categories = itemData.categories

@@ -12,24 +12,22 @@ export class CustomCursor {
 		this.shadowBlur = 10 // Intensidad del difuminado
 		this.shadowColor = 'rgba(0, 0, 0, 0.5)' // Color de la sombra (negro con transparencia)
 
-		this.input = { mouseX: 0, mouseY: 0 }
-		this.game.canvas.addEventListener('click', (e) => this.handleClick(e))
 		this.game.canvas.addEventListener('mousedown', (e) => this.mouseDown(e))
 		this.game.canvas.addEventListener('mouseup', (e) => this.mouseUp(e))
 		this.game.canvas.addEventListener('mousemove', (e) => this.mouseMove(e))
 	}
 
 	/* Events */
-	handleClick(e) {
-		const mouseX = e.offsetX
-		const mouseY = e.offsetY
-		const activeScene = this.game.sceneManager.activeScene
-		if (activeScene) activeScene.handleClick?.(mouseX, mouseY, e)
-		this.game.player.handleClick(mouseX, mouseY, e)
-	}
 	mouseDown(e) {
+		this.button = e.button
 		const mouseX = e.offsetX
 		const mouseY = e.offsetY
+
+		if (this.button === 0) {
+			this.lastDownX = mouseX
+			this.lastDownY = mouseY
+		}
+
 		const activeScene = this.game.sceneManager.activeScene
 		if (activeScene) activeScene.mouseDown?.(mouseX, mouseY, e)
 
@@ -39,6 +37,7 @@ export class CustomCursor {
 	mouseUp(e) {
 		const mouseX = e.offsetX
 		const mouseY = e.offsetY
+
 		const activeScene = this.game.sceneManager.activeScene
 		if (activeScene) activeScene.mouseUp?.(mouseX, mouseY, e)
 
@@ -48,8 +47,6 @@ export class CustomCursor {
 	mouseMove(e) {
 		const mouseX = e.offsetX
 		const mouseY = e.offsetY
-		this.input.mouseX = e.offsetX
-		this.input.mouseY = e.offsetY
 		const activeScene = this.game.sceneManager.activeScene
 		if (activeScene) activeScene.mouseMove?.(mouseX, mouseY, e)
 

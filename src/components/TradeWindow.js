@@ -14,8 +14,6 @@ export class TradeWindow {
 		} else {
 			this.npcInventory = this.npc.inventory
 		}
-		this.player.inventory.isOpen = true
-		this.npcInventory.isOpen = true
 	}
 
 	draw(ctx) {
@@ -65,8 +63,6 @@ export class TradeWindow {
 
 	close() {
 		this.isOpen = false
-		this.player.inventory.isOpen = false
-		this.npcInventory.isOpen = false
 		this.game.eventSystem.emit('tradeWindowClosed')
 	}
 }

@@ -25,6 +25,7 @@ export class Slot {
 	}
 
 	draw(ctx) {
+		if (!this.loaded.bg && this.loaded.bg_hover) return
 		const img = this.isHovered ? this.bg_hover : this.bg
 		ctx.drawImage(
 			img,

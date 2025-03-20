@@ -41,6 +41,10 @@ export class CustomCursor {
 		const activeScene = this.game.sceneManager.activeScene
 		if (activeScene) activeScene.mouseUp?.(mouseX, mouseY, e)
 
+		if (this.lastDownX === mouseX && this.lastDownY === mouseY) {
+			activeScene.handleClick?.(mouseX, mouseY, e)
+		}
+
 		this.game.player.mouseUp(mouseX, mouseY, e)
 		this.setModel('right')
 	}

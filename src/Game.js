@@ -32,12 +32,12 @@ export class Game {
 		this.height = this.tileSize * this.rows
 
 		/* Sistemas */
-		this.itemsManager = new ItemsManager(this)
 		this.keyboard = new Keyboard()
 		this.eventSystem = new EventSystem()
-		this.sceneManager = new SceneManager(this)
 		this.clock = new GameClock(this)
 		this.lastFrameTime = Date.now()
+		this.sceneManager = new SceneManager(this)
+		this.itemsManager = new ItemsManager(this)
 
 		this.player = new Player(100, 100, this)
 		/* Pointer */
@@ -46,17 +46,20 @@ export class Game {
 		/* Escenas */
 		this.sceneManager.addScene(SCENES.menu, new MenuScene(this))
 		this.sceneManager.addScene(SCENES.creation, new NewGameScene(this))
-		this.sceneManager.addScene(SCENES.map, new WorldMapScene(this))
+		this.sceneManager.addScene(
+			SCENES.map,
+			new WorldMapScene(this, { name: 'world map' })
+		)
 		// cities
 		this.sceneManager.addScene(
-			SCENES.city.valeris,
-			new PuertoValerisScene(this)
+			SCENES.city.valeris.scene,
+			new PuertoValerisScene(this, SCENES.city.valeris)
 		)
 		// Establecer escena inicial
 		// this.sceneManager.changeScene(SCENES.menu, false)
 		// this.sceneManager.changeScene(SCENES.creation)
 		// this.sceneManager.changeScene(SCENES.map)
-		this.sceneManager.changeScene(SCENES.city.valeris)
+		this.sceneManager.changeScene(SCENES.city.valeris.scene)
 
 		loadFonts()
 		this.setupCanvas()

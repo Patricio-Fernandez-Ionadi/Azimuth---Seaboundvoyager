@@ -8,8 +8,6 @@ import { TradeWindow } from '../../../components/TradeWindow.js'
 import { SCENES } from '../../../core/constants.js'
 import { checkCollisions } from '../../../core/utils.js'
 
-import NPCData from './npcs.js'
-
 const MOCK_WIDTH = 1984 /* 124 * 16 */
 const MOCK_HEIGHT = 1088 /* 68 * 16 */
 
@@ -42,8 +40,9 @@ const mockStructure = (ctx, camera, config) => {
 }
 
 export class PuertoValerisScene {
-	constructor(game) {
+	constructor(game, info) {
 		this.game = game
+		Object.keys(info).forEach((p) => (this[p] = info[p]))
 		this.eventSystem = this.game.eventSystem
 		this.keys = this.game.keyboard
 		this.camera = new CameraManager(this.game)
@@ -173,14 +172,13 @@ export class PuertoValerisScene {
 	/* Load/Unload */
 	#init() {
 		this.camera.setMapBounds(MOCK_WIDTH, MOCK_HEIGHT)
-		this.npcs = []
-		this.npcs = NPCData.map(
+		this.npcs = this.npcs.map(
 			(data) =>
 				new NPC({
 					x: data.x,
 					y: data.y,
 					color: data.color,
-					dialogs: data.speech,
+					dialogs: data.dialogs,
 					shopConfig: data.shopConfig ?? data.shopConfig,
 					game: this.game,
 				})

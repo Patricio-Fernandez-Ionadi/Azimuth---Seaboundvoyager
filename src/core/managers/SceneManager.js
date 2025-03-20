@@ -1,3 +1,4 @@
+import { Debugger } from '../../devutils/sceneDebugger.js'
 import { fadeIn, fadeOut } from '../utils.js'
 
 export class SceneManager {
@@ -33,6 +34,7 @@ export class SceneManager {
 		const { ctx } = this.game
 		if (this.activeScene) this.activeScene.render()
 		this.renderTransitionsOverlay(ctx)
+		Debugger({ ctx, label: this.activeScene.name, game: this.game })
 	}
 
 	setBackground(image) {

@@ -12,7 +12,9 @@ export class MenuGame {
 		this.selectedTab = this.defaultSelected
 		this.width = this.game.width * 0.9
 		this.height = this.game.height * 0.9
-		this.x = this.game.width * 0.05
+		this.hidden = { x: this.game.width + 10 }
+		this.opened = { x: this.game.width * 0.05 }
+		this.x = this.hidden.x
 		this.y = this.game.height * 0.05
 		this.container = {
 			header: {
@@ -24,6 +26,7 @@ export class MenuGame {
 
 		this.game.eventSystem.on('toggle_menugame', () => {
 			this.isOpen = !this.isOpen
+			this.slide()
 			// Calcular dimensiones del contenedor del menú
 			this.#calculateContainerDimensions()
 
@@ -44,6 +47,7 @@ export class MenuGame {
 				this.player.inventory.setGrid(10, 8)
 			}
 		})
+		// setTimeout(() => this.game.eventSystem.emit('toggle_menugame'), 500)
 	}
 
 	render() {
@@ -51,6 +55,15 @@ export class MenuGame {
 		this.#container()
 		this.#header()
 		this.#menuContent()
+	}
+
+	slide() {
+		// if (this.isOpen) {
+		// 	while (this.x < this.hidden.x) this.x++
+		// 	if (this.x >= this.hidden.x) this.isOpen = false
+		// } else {
+		// 	while (this.x > this.hidden.x) this.x++
+		// }
 	}
 
 	mouseDown(mouseX, mouseY, e) {

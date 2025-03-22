@@ -68,21 +68,23 @@ export class Game {
 
 	/* Main Loop */
 	animate(deltatime) {
+		// Reloj
 		const currentTime = Date.now()
 		const deltaTime = currentTime - this.lastFrameTime
-		// limpieza canvas
+		this.lastFrameTime = currentTime
+		this.clock.update(deltaTime)
+
+		// Limpieza canvas
 		this.ctx.clearRect(0, 0, this.width, this.height)
 
 		// Actualizaciones
-		this.lastFrameTime = currentTime
-		this.clock.update(deltaTime)
 		this.sceneManager.update(deltatime)
 
 		// Renderizados
 		this.sceneManager.render()
 		this.customCursor.draw(this.ctx)
 
-		// loop
+		// Loop
 		requestAnimationFrame(() => this.animate())
 	}
 

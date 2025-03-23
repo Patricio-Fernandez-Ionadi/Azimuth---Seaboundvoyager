@@ -56,10 +56,10 @@ export class Game {
 			new PuertoValerisScene(this, SCENES.city.valeris)
 		)
 		// Establecer escena inicial
-		// this.sceneManager.changeScene(SCENES.menu, false)
+		this.sceneManager.changeScene(SCENES.menu, false)
 		// this.sceneManager.changeScene(SCENES.creation)
 		// this.sceneManager.changeScene(SCENES.map)
-		this.sceneManager.changeScene(SCENES.city.valeris.scene)
+		// this.sceneManager.changeScene(SCENES.city.valeris.scene)
 
 		loadFonts()
 		this.setupCanvas()

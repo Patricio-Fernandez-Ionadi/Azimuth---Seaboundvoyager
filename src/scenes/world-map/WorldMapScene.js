@@ -64,7 +64,7 @@ export class WorldMapScene {
 			32
 		)
 		this.map_button.onClick = () => {
-			this.game.sceneManager.changeScene(SCENES.city.valeris)
+			this.game.sceneManager.changeScene(SCENES.city.valeris.scene)
 		}
 		this.uiManager.addComponent(this.map_button)
 

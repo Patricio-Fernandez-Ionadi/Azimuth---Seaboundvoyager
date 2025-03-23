@@ -36,7 +36,7 @@ export class NewGameScene {
 	/* Load/Unload */
 	onEnter() {
 		const goValeris = () =>
-			this.game.sceneManager.changeScene(SCENES.city.valeris)
+			this.game.sceneManager.changeScene(SCENES.city.valeris.scene)
 		const goMenu = () => this.game.sceneManager.changeScene(SCENES.menu)
 
 		this.initGame_button = new MenuButton(1, 'Comenzar')

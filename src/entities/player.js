@@ -156,6 +156,7 @@ export class Player {
 		this.updateInputs()
 		this.verticalMovemet()
 		this.horizontalMovement()
+		this.menuGame.update()
 
 		// Sprite
 		this.elapsedTime += this.gameClock.deltatime

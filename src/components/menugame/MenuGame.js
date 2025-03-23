@@ -12,9 +12,7 @@ export class MenuGame {
 		this.selectedTab = this.defaultSelected
 		this.width = this.game.width * 0.9
 		this.height = this.game.height * 0.9
-		this.hidden = { x: this.game.width + 10 }
-		this.opened = { x: this.game.width * 0.05 }
-		this.x = this.hidden.x
+		this.x = this.game.width * 0.05
 		this.y = this.game.height * 0.05
 		this.container = {
 			header: {
@@ -23,50 +21,61 @@ export class MenuGame {
 			},
 			content: {},
 		}
+		this.targetX = this.game.width * 0.05
+		this.currentX = this.game.width + 10
+		this.animationSpeed = 45
 
 		this.game.eventSystem.on('toggle_menugame', () => {
-			this.isOpen = !this.isOpen
-			this.slide()
-			// Calcular dimensiones del contenedor del menú
-			this.#calculateContainerDimensions()
-
-			if (this.isOpen) {
-				const rows = 10
-				const cols = 8
-				const slotSize = this.container.content.height / rows
-
-				this.player.inventory.slotSize = slotSize
-				this.player.inventory.y = this.y + 60
-				this.player.inventory.x = this.x + this.width - slotSize * cols
-
-				this.player.inventory.setGrid(rows, cols)
-			} else {
-				this.player.inventory.x = 435
-				this.player.inventory.y = 20
-				this.player.inventory.slotSize = 40
-				this.player.inventory.setGrid(10, 8)
-			}
+			this.toggle()
 		})
-		// setTimeout(() => this.game.eventSystem.emit('toggle_menugame'), 500)
+	}
+
+	update() {
+		if (this.isOpen) {
+			// Animación para abrir el menú
+			if (this.currentX > this.targetX) {
+				this.currentX -= this.animationSpeed
+			}
+		} else {
+			// Animación para cerrar el menú
+			if (this.currentX < this.x + this.width) {
+				this.currentX += this.animationSpeed
+			}
+		}
 	}
 
 	render() {
-		if (!this.isOpen) return
+		this.c.save()
+		this.c.translate(this.currentX, 0)
 		this.#container()
 		this.#header()
 		this.#menuContent()
+		this.c.restore()
 	}
 
-	slide() {
-		// if (this.isOpen) {
-		// 	while (this.x < this.hidden.x) this.x++
-		// 	if (this.x >= this.hidden.x) this.isOpen = false
-		// } else {
-		// 	while (this.x > this.hidden.x) this.x++
-		// }
+	toggle() {
+		this.isOpen = !this.isOpen
+
+		if (this.isOpen) {
+			const rows = 10
+			const cols = 8
+			const slotSize = this.container.content.height / rows
+
+			this.player.inventory.slotSize = slotSize
+			this.player.inventory.y = this.y + 60
+			this.player.inventory.x = this.x + this.width - slotSize * cols
+
+			this.player.inventory.setGrid(rows, cols)
+		} else {
+			this.player.inventory.x = 435
+			this.player.inventory.y = 20
+			this.player.inventory.slotSize = 40
+			this.player.inventory.setGrid(10, 8)
+		}
 	}
 
 	mouseDown(mouseX, mouseY, e) {
+		if (!this.isOpen) return
 		const tabWidth = this.container.header.tab.width
 		const tabHeight = this.container.header.height
 
@@ -102,7 +111,8 @@ export class MenuGame {
 			mouseX > trashX &&
 			mouseX < trashX + trashSize &&
 			mouseY > trashY &&
-			mouseY < trashY + trashSize
+			mouseY < trashY + trashSize &&
+			this.selectedTab === this.tabs[0]
 		) {
 			console.log('soltado en trash')
 		}

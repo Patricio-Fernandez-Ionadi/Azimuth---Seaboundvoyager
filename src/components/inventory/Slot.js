@@ -1,5 +1,3 @@
-import { loadImage } from '../../core/utils.js'
-
 const BG_IMG = '/src/components/inventory/assets/slot.png'
 const BG_HOVER_IMG = '/src/components/inventory/assets/slot_hovered.png'
 
@@ -13,31 +11,18 @@ export class Slot {
 		this.quantity = 0 // Cantidad del ítem
 		this.isHovered = false // Estado de hover
 
-		this.loaded = {}
-		loadImage(BG_IMG).then((res) => {
-			this.bg = res
-			this.loaded.bg = true
-		})
-		loadImage(BG_HOVER_IMG).then((res) => {
-			this.bg_hover = res
-			this.loaded.bg_hover = true
-		})
+		this.BG = new Image()
+		this.BG_HOVER = new Image()
+		this.BG.src = BG_IMG
+		this.BG_HOVER.src = BG_HOVER_IMG
 	}
 
 	draw(ctx) {
-		if (!this.loaded.bg && this.loaded.bg_hover) return
-		const img = this.isHovered ? this.bg_hover : this.bg
-		ctx.drawImage(
-			img,
-			0,
-			0,
-			img.width,
-			img.height,
-			this.x,
-			this.y,
-			this.width,
-			this.height
-		)
+		const img = this.isHovered ? this.BG_HOVER : this.BG
+		const crop = [0, 0, img.width, img.height]
+		const renderSize = [this.x, this.y, this.width, this.height]
+
+		ctx.drawImage(img, ...crop, ...renderSize)
 
 		if (this.item) {
 			if (this.item.draw) {

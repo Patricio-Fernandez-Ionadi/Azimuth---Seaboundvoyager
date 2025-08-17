@@ -1,6 +1,7 @@
 import { MenuGame } from '../components/menugame/MenuGame.js'
 import { Inventory } from '../components/inventory/Inventory.js'
-import { checkCollisions, loadImage } from '../core/utils.js'
+import { checkCollisions, isColliding, loadImage } from '../core/utils.js'
+import { validateInteractions } from './utils.js'
 
 export class Player {
   constructor(game) {
@@ -188,16 +189,17 @@ export class Player {
   update(collisions) {
     // 1. Procesar inputs -> setea velocity y sprite
     this.updateInputs()
+    this.handleMovement()
 
     // 2. Movimiento por ejes
     // --- Eje X ---
     this.x += this.velocity.x
-    this.updateHitbox()
+    this.#updateHitbox()
     this.handleCollisions(collisions, 'x')
 
     // --- Eje Y ---
     this.y += this.velocity.y
-    this.updateHitbox()
+    this.#updateHitbox()
     this.handleCollisions(collisions, 'y')
 
     // 3. Animaciones y acciones
@@ -207,7 +209,7 @@ export class Player {
     this.menuGame.update()
   }
 
-  updateSprite(state, facing) {
+  setSprite(state, facing) {
     let fac = facing
     if (!fac) fac = this.sprite.facing
 
@@ -217,49 +219,66 @@ export class Player {
       this.sprite.frame = 0
     }
   }
-  #updateSpriteFrame() {
-    this.elapsedTime += this.gameClock.deltatime
-    if (this.elapsedTime > this.sprite.frameBuffer) {
-      this.sprite.frame = (this.sprite.frame + 1) % this.sprite.current.frames
-      this.elapsedTime -= this.sprite.frameBuffer
-    }
-  }
-  updateHitbox() {
-    this.hitbox.x = this.x + this.hitbox.offsetX
-    this.hitbox.y = this.y + this.hitbox.offsetY
-  }
 
+  handleMovement() {
+    const dm = this.game.sceneManager?.activeScene?.dialogManager
+    const isFrozen = validateInteractions(dm, this)
+    const spriteDir = this.sprite.dir
+    const walkSprite = this.sprite.state.walk
+    const idleSprite = this.sprite.state.idle
+
+    if (isFrozen) {
+      this.velocityX(0)
+      this.velocityY(0)
+      this.setSprite(idleSprite, this.sprite.facing)
+      return
+    }
+
+    // Idle si no hay movimiento
+    if (this.velocity.x === 0 && this.velocity.y === 0) {
+      this.setSprite(idleSprite, this.sprite.facing)
+    }
+
+    const justXMovement = !(this.direction.up || this.direction.bottom)
+    // Movimiento horizontal
+    if (this.direction.left) {
+      this.velocityX(-this.speed)
+      if (justXMovement) this.setSprite(walkSprite, spriteDir.left)
+    } else if (this.direction.right) {
+      this.velocityX(this.speed)
+      if (justXMovement) this.setSprite(walkSprite, spriteDir.right)
+    } else this.velocityX(0)
+
+    // Movimiento vertical
+    if (this.direction.up) {
+      this.velocityY(-this.speed)
+      this.setSprite(walkSprite, spriteDir.top)
+    } else if (this.direction.bottom) {
+      this.velocityY(this.speed)
+      this.setSprite(walkSprite, spriteDir.bot)
+    } else this.velocityY(0)
+  }
   handleCollisions(collisions, axis) {
     for (const block of collisions) {
-      if (
-        this.hitbox.x < block.x + block.width &&
-        this.hitbox.x + this.hitbox.width > block.x &&
-        this.hitbox.y < block.y + block.height &&
-        this.hitbox.y + this.hitbox.height > block.y
-      ) {
+      if (isColliding(this, block)) {
         if (axis === 'x') {
-          if (this.velocity.x > 0) {
-            // moviendo derecha
+          if (this.direction.right && !this.direction.left) {
             this.x = block.x - this.width + this.hitbox.offsetX
-          } else if (this.velocity.x < 0) {
-            // moviendo izquierda
+          } else if (this.direction.left && !this.direction.right) {
             this.x = block.x + block.width - this.hitbox.offsetX
           }
-          this.velocity.x = 0
+          this.velocityX(0)
         }
 
         if (axis === 'y') {
-          if (this.velocity.y > 0) {
-            // moviendo abajo
+          if (this.direction.bottom) {
             this.y = block.y - this.height + this.hitbox.offsetY
-          } else if (this.velocity.y < 0) {
-            // moviendo arriba
+          } else if (this.direction.up) {
             this.y = block.y + block.height - this.hitbox.offsetY
           }
-          this.velocity.y = 0
+          this.velocityY(0)
         }
-
-        this.updateHitbox()
+        this.#updateHitbox()
       }
     }
   }
@@ -273,7 +292,7 @@ export class Player {
       this.keyPressed = true
       this.velocity.x = 0
       this.velocity.y = 0
-      this.updateSprite(this.sprite.state.shot)
+      this.setSprite(this.sprite.state.shot)
       this.canShot = false
     }
 
@@ -323,58 +342,14 @@ export class Player {
   }
   updateInputs() {
     if (!this.game.keyboard.pressed) this.keyPressed = false
-
+    const keyPressed = this.game.keyboard.onPress
     this.direction = {
-      left: this.game.keyboard.onPress.a,
-      right: this.game.keyboard.onPress.d,
-      up: this.game.keyboard.onPress.w,
-      bottom: this.game.keyboard.onPress.s,
+      left: keyPressed.a,
+      right: keyPressed.d,
+      up: keyPressed.w,
+      bottom: keyPressed.s,
     }
-    this.action = {
-      shot: this.game.keyboard.onPress.q,
-    }
-
-    const npcOptioning =
-      !!this.game.sceneManager?.activeScene?.dialogManager.currentOptions
-    const menuOpen = this.menuGame.isOpen
-
-    const isShooting = this.sprite.current === this.sprite.state.shot
-
-    this.interactionRequired = npcOptioning || menuOpen || isShooting
-
-    // Si no se puede mover, velocidad = 0
-    if (this.interactionRequired) {
-      this.velocity.x = 0
-      this.velocity.y = 0
-      return
-    }
-
-    // Movimiento horizontal
-    if (this.direction.left) {
-      this.velocity.x = -this.speed
-      if (!this.direction.up && !this.direction.bottom)
-        this.updateSprite(this.sprite.state.walk, this.sprite.dir.left)
-    } else if (this.direction.right) {
-      this.velocity.x = this.speed
-      if (!this.direction.up && !this.direction.bottom)
-        this.updateSprite(this.sprite.state.walk, this.sprite.dir.right)
-    } else {
-      this.velocity.x = 0
-    }
-    // Movimiento vertical
-    if (this.direction.up) {
-      this.velocity.y = -this.speed
-      this.updateSprite(this.sprite.state.walk, this.sprite.dir.top)
-    } else if (this.direction.bottom) {
-      this.velocity.y = this.speed
-      this.updateSprite(this.sprite.state.walk, this.sprite.dir.bot)
-    } else {
-      this.velocity.y = 0
-    }
-    // Idle si no hay movimiento
-    if (this.velocity.x === 0 && this.velocity.y === 0) {
-      this.updateSprite(this.sprite.state.idle, this.sprite.facing)
-    }
+    this.action = { shot: keyPressed.q }
   }
 
   init() {
@@ -386,5 +361,22 @@ export class Player {
     this.inventory.addItem(initialInventory[0], 10, this)
     this.inventory.addItem(initialInventory[1], 1, this)
     this.inventory.addItem(initialInventory[2], 1, this)
+  }
+  velocityX(val = 0) {
+    return (this.velocity.x = val)
+  }
+  velocityY(val = 0) {
+    return (this.velocity.y = val)
+  }
+  #updateHitbox() {
+    this.hitbox.x = this.x + this.hitbox.offsetX
+    this.hitbox.y = this.y + this.hitbox.offsetY
+  }
+  #updateSpriteFrame() {
+    this.elapsedTime += this.gameClock.deltatime
+    if (this.elapsedTime > this.sprite.frameBuffer) {
+      this.sprite.frame = (this.sprite.frame + 1) % this.sprite.current.frames
+      this.elapsedTime -= this.sprite.frameBuffer
+    }
   }
 }

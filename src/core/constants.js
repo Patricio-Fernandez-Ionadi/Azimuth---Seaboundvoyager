@@ -79,6 +79,18 @@ export const SCENES = {
             },
           },
         },
+        {
+          x: 420,
+          y: 420,
+          color: 'darkcyan',
+          dialogs: [
+            '¿Qué pasa muchacho?',
+            'Parece que estas re perdido',
+            '¿Necesitas ayuda?',
+            '¡Buena suerte en tu viaje!',
+          ],
+          isMentor: true,
+        },
       ],
     },
   },

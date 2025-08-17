@@ -52,8 +52,10 @@ export class PuertoValerisScene {
     if (this.keys.onPress.escape && this.tradeWindow) {
       this.tradeWindow.close()
     }
-    // console.log(this.game.clock.currentHour)
-    this.npcs.forEach((e) => e.shop?.checkRestock(this.game.clock.currentHour))
+    this.npcs.forEach((e) => {
+      e.shop?.checkRestock(this.game.clock.currentHour)
+      e.update()
+    })
   }
 
   render() {
@@ -82,10 +84,12 @@ export class PuertoValerisScene {
 
     for (const npc of this.npcs) {
       // Verificar si el jugador está en zona de interaccion
-      let canTalk =
+      let canRegularTalk =
         Math.abs(playerX - npc.x) < 50 && Math.abs(playerY - npc.y) < 50 // Jugador cerca del NPC
 
-      if (canTalk) {
+      let mentorTalk = npc.isMentor
+
+      if (canRegularTalk || mentorTalk) {
         if (this.keys.onPress.e && !this.keyPressed) {
           this.keyPressed = true
           // si esta inactivo, interactuar
@@ -141,6 +145,7 @@ export class PuertoValerisScene {
           dialogs: data.dialogs,
           shopConfig: data.shopConfig ?? data.shopConfig,
           game: this.game,
+          isMentor: data.isMentor ? data.isMentor : false,
         })
     )
 

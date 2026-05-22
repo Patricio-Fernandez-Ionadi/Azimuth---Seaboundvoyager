@@ -16,7 +16,7 @@ export class WorldMapScene {
     this.mapManager = new MapManager(this.game)
     this.mapManager.loadMap(MAP_DATA)
     this.map = new StaticImage(MAP_IMG)
-    this.camera = new CameraManager(this)
+    this.camera = new CameraManager(this.game)
     this.popupManager = new PopupManager(this)
 
     /* Eventos */

@@ -15,6 +15,7 @@ import { MenuScene } from './scenes/menu/MenuScene.js'
 import { NewGameScene } from './scenes/creation/NewGameScene.js'
 import { WorldMapScene } from './scenes/world-map/WorldMapScene.js'
 import { PuertoValerisScene } from './scenes/cities/a_puertovaleris/PuertoValeris.js'
+import { QuestManager } from './core/managers/QuestManager.js'
 
 export class Game {
   constructor() {
@@ -40,6 +41,7 @@ export class Game {
     this.itemsManager = new ItemsManager(this)
 
     this.player = new Player(this)
+    this.questManager = new QuestManager(this)
     /* Pointer */
     this.customCursor = new CustomCursor(this)
 

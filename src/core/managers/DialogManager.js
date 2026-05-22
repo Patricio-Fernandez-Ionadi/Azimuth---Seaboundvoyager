@@ -19,7 +19,8 @@ export class DialogManager {
   advanceDialogue() {
     if (!this.currentNPC) return
 
-    const dialog = this.currentNPC.dialogs[this.currentMessageIndex]
+    let dialog = this.currentNPC.dialogs[this.currentMessageIndex]
+
     if (!dialog) {
       this.endDialogue()
       return

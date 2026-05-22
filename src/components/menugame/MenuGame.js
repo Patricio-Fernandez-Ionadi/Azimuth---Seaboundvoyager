@@ -12,7 +12,7 @@ export class MenuGame {
     this.selectedTab = this.defaultSelected
     this.width = this.game.width * 0.9
     this.height = this.game.height * 0.9
-    this.x = this.game.width * 0.03
+    this.x = this.game.width * 0.05
     this.y = this.game.height * 0.05
     this.container = {
       header: {
@@ -22,7 +22,7 @@ export class MenuGame {
       content: {},
     }
     this.targetX = this.game.width * 0.05
-    this.currentX = this.game.width + 10
+    this.currentX = this.game.width
     this.animationSpeed = 45
 
     this.game.eventSystem.on('toggle_menugame', () => {
@@ -38,7 +38,8 @@ export class MenuGame {
       }
     } else {
       // Animación para cerrar el menú
-      if (this.currentX < this.x + this.width) {
+      // if (this.currentX < this.x + this.width + 20) {
+      if (this.currentX < this.game.width + 10) {
         this.currentX += this.animationSpeed
       }
     }
@@ -189,7 +190,6 @@ export class MenuGame {
 
     // box for drop items
     this.c.fillStyle = 'red'
-
     const trashSize = 64
     const trashX = this.x + 340
     const trashY = y + 20

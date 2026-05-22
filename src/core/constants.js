@@ -5,6 +5,7 @@ export const SCENES = {
       scene: 'puerto_valeris_scene',
       npcs: [
         {
+          id: 0,
           x: 420,
           y: 304,
           color: 'blue',
@@ -34,6 +35,7 @@ export const SCENES = {
           },
         },
         {
+          id: 3,
           x: 300,
           y: 260,
           color: 'green',
@@ -44,6 +46,7 @@ export const SCENES = {
           ],
         },
         {
+          id: 0,
           x: 380,
           y: 50,
           color: 'yellow',
@@ -80,16 +83,27 @@ export const SCENES = {
           },
         },
         {
+          id: 1,
           x: 420,
           y: 420,
           color: 'darkcyan',
           dialogs: [
             '¿Qué pasa muchacho?',
-            'Parece que estas re perdido',
+            'Parece que estas perdido',
             '¿Necesitas ayuda?',
-            '¡Buena suerte en tu viaje!',
           ],
-          isMentor: true,
+          dialogPhases: [
+            [
+              '¿Qué pasa muchacho?',
+              'Parece que estas perdido',
+              '¿Necesitas ayuda?',
+            ],
+            [
+              '¡Has vuelto!',
+              'Me alegra que estés bien.',
+              'Sigue explorando el puerto.',
+            ],
+          ],
         },
       ],
     },

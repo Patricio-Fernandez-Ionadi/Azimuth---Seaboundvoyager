@@ -1,5 +1,5 @@
 export const validateInteractions = (dialogManager, player) => {
-  const mentorTalk = dialogManager?.currentNPC?.isMentor
+  const mentorTalk = dialogManager?.currentNPC?.id === 1
 
   const npcOptioning = !!dialogManager.currentOptions
   const menuOpen = player.menuGame.isOpen

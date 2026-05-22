@@ -8,21 +8,20 @@ export class NPC {
     this.width = 32
     this.height = 32
     this.color = config.color
-    this.dialogs = config.dialogs // Array de mensajes
+    this.dialogs = config.dialogs
+    this.dialogPhases = config.dialogPhases ?? null
+    this.dialogPhase = config.dialogPhase ?? 0
     this.isInteracting = false
-    this.hasInteracted = false
-    this.isMentor = config.isMentor
-
-    // console.log(shopConfig)
+    this.id = config.id
     this.shop = config.shopConfig ? new Shop(this, config.shopConfig) : null
   }
 
   update() {
-    // Si es un mentor y el jugador entra en rango, dispara automáticamente
-    if (this.isMentor && !this.hasInteracted && this.isPlayerNear()) {
-      console.log('player en rango')
-      this.hasInteracted = true
-      this.game.eventSystem.emit('npcInteracted', this)
+    // Mentor: auto-interactuar solo en el primer encuentro
+    if (this.id === 1 && this.isPlayerNear()) {
+      if (!this.isInteracting && this.dialogPhase === 0) {
+        this.interact()
+      }
     }
   }
   draw(ctx, camera) {
@@ -33,12 +32,18 @@ export class NPC {
   interact() {
     if (!this.isInteracting) {
       this.isInteracting = true
+      if (this.dialogPhases) {
+        this.dialogs = this.dialogPhases[this.dialogPhase]
+      }
       this.game.eventSystem.emit('npcInteracted', this)
     }
   }
 
   endInteraction() {
     this.isInteracting = false
+    if (this.dialogPhases) {
+      this.dialogPhase = Math.min(this.dialogPhase + 1, this.dialogPhases.length - 1)
+    }
     this.game.eventSystem.emit('interactionEnded', this)
   }
 
@@ -46,6 +51,6 @@ export class NPC {
     const dx = this.game.player.x - this.x
     const dy = this.game.player.y - this.y
     const distance = Math.sqrt(dx * dx + dy * dy)
-    return distance < 150 // rango configurable
+    return distance < 150
   }
 }

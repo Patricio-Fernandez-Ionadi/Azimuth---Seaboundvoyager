@@ -159,11 +159,11 @@ export class Inventory {
 		if (!placed) {
 			if (this.tradeMode) {
 				// En modo de comercio, intentar vender el ítem
-				if (this.owner instanceof Player && this.draggedItem?.price) {
+				if (this.owner.isPlayer && this.draggedItem?.price) {
 					const sellPrice = this.draggedItem.price.sell * this.draggedQuantity
 					this.owner.resources.gold += sellPrice
 					console.log(
-						`Vendido: ${this.draggedItem.name} x${this.draggedQuantity}`
+						`Vendido: ${this.draggedItem.name} x${this.draggedQuantity}`,
 					)
 				} else {
 					console.warn('El ítem no tiene precio o no se puede vender')
@@ -259,8 +259,8 @@ export class Inventory {
 					quality === 'excellent'
 						? 'lightgreen'
 						: quality === 'rare'
-						? 'violet'
-						: 'white',
+							? 'violet'
+							: 'white',
 				y: y + lineHeight * 4,
 			},
 		]

@@ -241,20 +241,20 @@ export class Player {
 		}
 
 		const justXMovement = !(this.direction.up || this.direction.bottom)
-		// Movimiento horizontal
-		if (this.direction.left) {
+		// Movimiento horizontal (opuestos se anulan)
+		if (this.direction.left && !this.direction.right) {
 			this.velocityX(-this.speed)
 			if (justXMovement) this.setSprite(walkSprite, spriteDir.left)
-		} else if (this.direction.right) {
+		} else if (this.direction.right && !this.direction.left) {
 			this.velocityX(this.speed)
 			if (justXMovement) this.setSprite(walkSprite, spriteDir.right)
 		} else this.velocityX(0)
 
-		// Movimiento vertical
-		if (this.direction.up) {
+		// Movimiento vertical (opuestos se anulan)
+		if (this.direction.up && !this.direction.bottom) {
 			this.velocityY(-this.speed)
 			this.setSprite(walkSprite, spriteDir.top)
-		} else if (this.direction.bottom) {
+		} else if (this.direction.bottom && !this.direction.up) {
 			this.velocityY(this.speed)
 			this.setSprite(walkSprite, spriteDir.bot)
 		} else this.velocityY(0)
@@ -272,9 +272,9 @@ export class Player {
 				}
 
 				if (axis === 'y') {
-					if (this.direction.bottom) {
+					if (this.direction.bottom && !this.direction.up) {
 						this.y = block.y - this.height + this.hitbox.offsetY
-					} else if (this.direction.up) {
+					} else if (this.direction.up && !this.direction.bottom) {
 						this.y = block.y + block.height - this.hitbox.offsetY
 					}
 					this.velocityY(0)

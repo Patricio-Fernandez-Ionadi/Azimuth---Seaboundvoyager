@@ -1,4 +1,4 @@
-import { Keyboard } from './core/events/Keyboard.js'
+﻿import { Keyboard } from './core/events/Keyboard.js'
 import { EventSystem } from './core/events/EventSystem.js'
 import { SceneManager } from './core/managers/SceneManager.js'
 import { loadFonts } from './core/fonts.js'
@@ -15,6 +15,7 @@ import { MenuScene } from './scenes/menu/MenuScene.js'
 import { NewGameScene } from './scenes/creation/NewGameScene.js'
 import { WorldMapScene } from './scenes/world-map/WorldMapScene.js'
 import { PuertoValerisScene } from './scenes/cities/a_puertovaleris/PuertoValeris.js'
+import * as Cities from './scenes/cities/index.js'
 import { QuestManager } from './core/managers/QuestManager.js'
 
 export class Game {
@@ -52,7 +53,95 @@ export class Game {
     // cities
     this.sceneManager.addScene(
       SCENES.city.valeris.scene,
-      new PuertoValerisScene(this, SCENES.city.valeris)
+      new PuertoValerisScene(this, SCENES.city.valeris),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.bahiadeloslamentos.scene,
+      new Cities.BahiaDeLosLamentos(this, SCENES.city.bahiadeloslamentos),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.ciudadluzmar.scene,
+      new Cities.CiudadLuzmar(this, SCENES.city.ciudadluzmar),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.fuertedragal.scene,
+      new Cities.FuerteDragal(this, SCENES.city.fuertedragal),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.marjaloscuro.scene,
+      new Cities.MarjalOscuro(this, SCENES.city.marjaloscuro),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.bastiondemedianoche.scene,
+      new Cities.BastionDeMedianoche(this, SCENES.city.bastiondemedianoche),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.puertosombrio.scene,
+      new Cities.PuertoSombrio(this, SCENES.city.puertosombrio),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.ciudadaurea.scene,
+      new Cities.CiudadAurea(this, SCENES.city.ciudadaurea),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.puertodelasmareas.scene,
+      new Cities.PuertoDeLasMareas(this, SCENES.city.puertodelasmareas),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.rocadeltrueno.scene,
+      new Cities.RocaDelTrueno(this, SCENES.city.rocadeltrueno),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.arrecifecarmesi.scene,
+      new Cities.ArrecifeCarmesi(this, SCENES.city.arrecifecarmesi),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.fuertesanguinario.scene,
+      new Cities.FuerteSanguinario(this, SCENES.city.fuertesanguinario),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.puertomistral.scene,
+      new Cities.PuertoMistral(this, SCENES.city.puertomistral),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.islabrumaris.scene,
+      new Cities.IslaBrumaris(this, SCENES.city.islabrumaris),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.puertoespejomar.scene,
+      new Cities.PuertoEspejomar(this, SCENES.city.puertoespejomar),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.isladelosnaufragios.scene,
+      new Cities.IslaDeLosNaufragios(this, SCENES.city.isladelosnaufragios),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.refugiocorsario.scene,
+      new Cities.RefugioCorsario(this, SCENES.city.refugiocorsario),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.caladelexilio.scene,
+      new Cities.CalaDelExilio(this, SCENES.city.caladelexilio),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.isladelabismo.scene,
+      new Cities.IslaDelAbismo(this, SCENES.city.isladelabismo),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.isladelossusurros.scene,
+      new Cities.IslaDeLosSusurros(this, SCENES.city.isladelossusurros),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.caletaespectral.scene,
+      new Cities.CaletaEspectral(this, SCENES.city.caletaespectral),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.ciudadmercaris.scene,
+      new Cities.CiudadMercaris(this, SCENES.city.ciudadmercaris),
+    )
+    this.sceneManager.addScene(
+      SCENES.city.villatempestad.scene,
+      new Cities.VillaTempestad(this, SCENES.city.villatempestad),
     )
     // Establecer escena inicial
     // this.sceneManager.changeScene(SCENES.menu, false)
@@ -114,3 +203,4 @@ export class Game {
     })
   }
 }
+

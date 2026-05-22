@@ -1,8 +1,8 @@
-import { UIManager } from '../../core/managers/UIManager.js'
+﻿import { UIManager } from '../../core/managers/UIManager.js'
 import { MapManager } from '../../core/managers/MapManager.js'
 import { PopupManager } from './components/PopupManager.js'
 import { Button } from '../../components/Button.js'
-import { SCENES } from '../../core/constants.js'
+import { SCENES, CITY_ZONE_MAP } from '../../core/constants.js'
 import { CameraManager } from '../../core/managers/CameraManager.js'
 import { StaticImage } from '../../core/StaticImage.js'
 
@@ -20,8 +20,13 @@ export class WorldMapScene {
     this.popupManager = new PopupManager(this)
 
     /* Eventos */
-    this.game.eventSystem.on('citySelected', (city) => {
-      console.log('Una ciudad fue seleccionada:', city)
+    this.game.eventSystem.on('citySelected', (zone) => {
+      const cityConfig = CITY_ZONE_MAP[zone.name]
+      if (cityConfig) {
+        this.game.sceneManager.changeScene(cityConfig.scene)
+      } else {
+        console.warn('Ciudad no encontrada:', zone.name)
+      }
     })
   }
 
@@ -110,3 +115,4 @@ export class WorldMapScene {
     this.camera.mouseUp(mouseX, mouseY, e)
   }
 }
+

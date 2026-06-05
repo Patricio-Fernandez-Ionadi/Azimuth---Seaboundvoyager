@@ -1,6 +1,6 @@
 import { Text } from '../Text.js'
 
-const TABS = ['Inventario', 'Crear', 'Estadisticas', 'Logros']
+const TABS = ['Inventario', 'Crear', 'Estadisticas', 'Misiones', 'Logros']
 export class MenuGame {
   constructor(player) {
     this.player = player
@@ -166,24 +166,27 @@ export class MenuGame {
       this.container.content.height
     )
 
-    // Mostrar contenido según la pestaña seleccionada
-    switch (this.selectedTab) {
-      case 'Inventario':
-        this.#drawInventoryContent()
-        break
-      case 'Crear':
-        this.#drawCraftingContent()
-        break
-      case 'Estadisticas':
-        this.#drawStatsContent()
-        break
-      case 'Logros':
-        this.#drawAchievementsContent()
-        break
-      default:
-        break
-    }
-  }
+		// Mostrar contenido según la pestaña seleccionada
+		switch (this.selectedTab) {
+			case 'Inventario':
+				this.#drawInventoryContent()
+				break
+			case 'Crear':
+				this.#drawCraftingContent()
+				break
+			case 'Estadisticas':
+				this.#drawStatsContent()
+				break
+			case 'Misiones':
+				this.#drawQuestsContent()
+				break
+			case 'Logros':
+				this.#drawAchievementsContent()
+				break
+			default:
+				break
+		}
+	}
 
   #drawInventoryContent() {
     const y = this.container.content.y
@@ -231,41 +234,225 @@ export class MenuGame {
       align: 'center',
     })
   }
-  #drawStatsContent() {
-    const x = this.x
-    const y = this.container.content.y
-    const height = this.container.content.height
-    const width = this.width
+	#drawStatsContent() {
+		const x = this.x
+		const y = this.container.content.y
+		const height = this.container.content.height
+		const width = this.width
 
-    this.c.fillStyle = '#ff000055' // Rojo para el área de estadísticas
-    this.c.fillRect(x, y, width, height)
+		// Fondo
+		this.c.fillStyle = '#1a1a1a99'
+		this.c.fillRect(x, y, width, height)
 
-    // Ejemplo: Barra de salud
-    const healthBarX = x + width * 0.1
-    const healthBarY = y + height * 0.1
-    const healthBarWidth = width * 0.8
-    const healthBarHeight = 20
+		const p = this.player
+		const labelSize = 18
+		const valueSize = 18
+		const rowHeight = 38
+		const colWidth = width / 2
 
-    this.c.fillStyle = '#00ff00' // Verde para la barra de salud
-    this.c.fillRect(
-      healthBarX,
-      healthBarY,
-      healthBarWidth * 0.75,
-      healthBarHeight
-    ) // 75% de salud
+		// Título: Habilidades
+		Text({
+			ctx: this.c,
+			x: x + 20,
+			y: y + 30,
+			size: 22,
+			label: 'Habilidades',
+			align: 'left',
+		})
 
-    this.c.strokeStyle = '#ffffff'
-    this.c.strokeRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight)
+		// Cada skill con su barra
+		const skills = p.skills ?? {}
+		const skillKeys = Object.keys(skills)
+		skillKeys.forEach((key, i) => {
+			const s = skills[key]
+			const rowY = y + 60 + i * rowHeight
+			const barX = x + 20
+			const barW = colWidth - 40
+			const barH = 16
 
-    Text({
-      ctx: this.c,
-      x: healthBarX + healthBarWidth / 2,
-      y: healthBarY + healthBarHeight + 20,
-      size: 24,
-      label: 'Salud: 75%',
-      align: 'center',
-    })
-  }
+			Text({
+				ctx: this.c,
+				x: barX,
+				y: rowY,
+				size: labelSize,
+				label: this.#formatKey(key),
+				align: 'left',
+			})
+
+			// barra de progreso (0-100)
+			this.c.fillStyle = '#333333'
+			this.c.fillRect(barX, rowY + 4, barW, barH)
+			this.c.fillStyle = '#3aa0ff'
+			this.c.fillRect(barX, rowY + 4, barW * (s.value / 100), barH)
+
+			Text({
+				ctx: this.c,
+				x: barX + barW + 10,
+				y: rowY + 4,
+				size: valueSize,
+				label: `${s.value}`,
+				align: 'left',
+			})
+		})
+
+		// Título: Afinidad
+		const affinitiesStartY = y + 60 + skillKeys.length * rowHeight + 20
+		Text({
+			ctx: this.c,
+			x: x + 20,
+			y: affinitiesStartY,
+			size: 22,
+			label: 'Afinidad',
+			align: 'left',
+		})
+
+		const aff = p.affinities ?? {}
+		const affKeys = Object.keys(aff)
+		affKeys.forEach((key, i) => {
+			const value = aff[key]
+			const rowY = affinitiesStartY + 30 + i * rowHeight
+			const isMain = p.mainAffinity === key
+			const isSecondary = p.secondaryAffinity === key
+
+			Text({
+				ctx: this.c,
+				x: x + 20,
+				y: rowY,
+				size: labelSize,
+				label: this.#formatKey(key) + (isMain ? ' (principal)' : isSecondary ? ' (secundaria)' : ''),
+				align: 'left',
+			})
+
+			// 10 niveles
+			for (let lvl = 0; lvl < 10; lvl++) {
+				const cx = x + 220 + lvl * 18
+				const cy = rowY + 4
+				this.c.fillStyle = lvl < value ? this.#affinityColor(key) : '#333'
+				this.c.fillRect(cx, cy, 14, 14)
+			}
+		})
+	}
+
+	/** Dibuja la pestaña de Misiones (quests activas y completadas). */
+	#drawQuestsContent() {
+		const x = this.x
+		const y = this.container.content.y
+		const width = this.width
+		const height = this.container.content.height
+
+		this.c.fillStyle = '#1a1a1a99'
+		this.c.fillRect(x, y, width, height)
+
+		const qm = this.game.questManager
+		const active = qm?.getActiveQuests?.() ?? []
+		const completed = Array.from(qm?.completedQuests ?? [])
+
+		let rowY = y + 30
+		const rowHeight = 60
+		const padX = x + 20
+
+		Text({
+			ctx: this.c,
+			x: padX,
+			y: rowY,
+			size: 22,
+			label: 'Misiones activas',
+			align: 'left',
+		})
+		rowY += 30
+
+		if (active.length === 0) {
+			Text({
+				ctx: this.c,
+				x: padX,
+				y: rowY,
+				size: 16,
+				label: 'No hay misiones activas.',
+				align: 'left',
+			})
+			rowY += rowHeight
+		} else {
+			active.forEach((q) => {
+				Text({
+					ctx: this.c,
+					x: padX,
+					y: rowY,
+					size: 18,
+					label: `• ${q.title} (${q.branch})`,
+					align: 'left',
+				})
+				const step = q.steps?.[q.currentStep]
+				if (step?.description) {
+					Text({
+						ctx: this.c,
+						x: padX + 20,
+						y: rowY + 22,
+						size: 14,
+						label: `   → ${step.description}`,
+						align: 'left',
+					})
+				}
+				rowY += rowHeight
+			})
+		}
+
+		rowY += 20
+		Text({
+			ctx: this.c,
+			x: padX,
+			y: rowY,
+			size: 22,
+			label: 'Misiones completadas',
+			align: 'left',
+		})
+		rowY += 30
+		if (completed.length === 0) {
+			Text({
+				ctx: this.c,
+				x: padX,
+				y: rowY,
+				size: 16,
+				label: '—',
+				align: 'left',
+			})
+		} else {
+			completed.forEach((qId) => {
+				const q = qm.getById(qId)
+				Text({
+					ctx: this.c,
+					x: padX,
+					y: rowY,
+					size: 16,
+					label: `✓ ${q?.title ?? qId}`,
+					align: 'left',
+				})
+				rowY += 26
+			})
+		}
+	}
+
+	/** Capitaliza y traduce nombres de keys (camelCase -> "Camel Case"). */
+	#formatKey(key) {
+		const map = {
+			perspicacia: 'Perspicacia',
+			negociacion: 'Negociación',
+			destreza: 'Destreza',
+			rebeldia: 'Rebeldía',
+			prestigio: 'Prestigio',
+			asombro: 'Asombro',
+		}
+		return map[key] ?? key
+	}
+
+	/** Color asociado a cada afinidad. */
+	#affinityColor(key) {
+		const colors = {
+			rebeldia: '#c0392b',
+			prestigio: '#f1c40f',
+			asombro: '#9b59b6',
+		}
+		return colors[key] ?? '#888'
+	}
   #drawAchievementsContent() {
     const x = this.x
     const y = this.container.content.y

@@ -248,7 +248,47 @@ const UTILITY = [
 	},
 ]
 // 80 - 89
+// Brújula de latón entregada por Silas en la quest "silas_intro".
+// Su aguja no apunta al norte: vibra levemente hacia el mar abierto.
+const COMPASS_RELIC = [
+	{
+		maxStack: 1,
+		name: 'Brújula de latón',
+		description:
+			'Una vieja brújula cuya aguja no apunta al norte, sino hacia lo desconocido.',
+		src: createSrc('map_item'),
+		categories: [CAT.cartography, CAT.unique],
+		stackeable: false,
+		raw_id: 80,
+		variant: {
+			[QTY.unique]: {
+				price: mkValue(null, null),
+				u_id: 801,
+			},
+		},
+	},
+]
 // 90 - 99
+// Pergamino con sello rojo entregado por Silas en la quest "silas_intro".
+// Es un contrato de deuda con un nombre que a Elian le resulta familiar.
+const SCROLL_RELIC = [
+	{
+		maxStack: 1,
+		name: 'Pergamino sellado',
+		description:
+			'Un contrato de deuda enrollado con lacre rojo y un nombre familiar.',
+		src: createSrc('letter_item'),
+		categories: [CAT.unique, CAT.comercial],
+		stackeable: false,
+		raw_id: 90,
+		variant: {
+			[QTY.unique]: {
+				price: mkValue(null, null),
+				u_id: 901,
+			},
+		},
+	},
+]
 // 100 - 109
 const COMERCIAL = [
 	{
@@ -320,6 +360,8 @@ export const ITEMS_DATA = GEMS.concat(FOOD)
 	.concat(DRINK)
 	.concat(CARTOGRAPHY)
 	.concat(UTILITY)
+	.concat(COMPASS_RELIC)
+	.concat(SCROLL_RELIC)
 	.concat(COMERCIAL)
 	.concat(WEAPON)
 

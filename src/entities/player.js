@@ -135,25 +135,42 @@ export class Player {
 		this.menuGame = new MenuGame(this)
 		this.selectedTab = this.menuGame.defaultSelected
 
+		// Estadísticas vitales del personaje.
 		this.stats = {
 			hp: 100,
 			hunger: 0,
 			drunk: 0,
 		}
-		this.reputation = {
-			pirates: 0,
-			merchants: 0,
-			explorers: 0,
+
+		// Habilidades (rango 0-100). Mejoran con práctica y minijuegos.
+		//   - perspicacia: notar detalles, detectar mentiras, encontrar pistas.
+		//   - negociacion: regatear, persuadir, conseguir mejores precios.
+		//   - destreza:   combate, armas de fuego, sigilo y agilidad.
+		this.skills = {
+			perspicacia: { value: 0, xp: 0 },
+			negociacion: { value: 0, xp: 0 },
+			destreza: { value: 0, xp: 0 },
 		}
+
+		// Afinidad (rango 0-10): brújula moral del personaje.
+		//   - rebeldia: desprecio por la autoridad, amor por la libertad y el caos.
+		//   - prestigio: honor, cumplimiento de la palabra, reputación legítima.
+		//   - asombro:  curiosidad intelectual, empatía por lo desconocido.
+		// La primera afinidad en alcanzar nivel 3 se vuelve "mainAffinity" y
+		// limita cuánto pueden subir las otras (ver AffinityManager).
+		this.affinities = {
+			rebeldia: 0,
+			prestigio: 0,
+			asombro: 0,
+		}
+		this.mainAffinity = null
+		this.secondaryAffinity = null
+
+		// Recursos económicos / supervivencia.
 		this.resources = {
 			food: 10,
 			wood: 5,
 			gold: 200000,
-		}
-		this.skills = {
-			navigation: 1,
-			negotiation: 1,
-			survival: 1,
 		}
 
 		this.init()

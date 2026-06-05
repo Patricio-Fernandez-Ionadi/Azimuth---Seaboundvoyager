@@ -28,8 +28,8 @@ export class PuertoValerisScene extends CityScene {
 			mapWidth: 16 * 124,
 			mapHeight: 16 * 68,
 			// Spawn en el pasillo central (plaza), cerca de los 3 NPCs de rama.
-			startX: 992,
-			startY: 496,
+			startX: 950,
+			startY: 166,
 			drawBorder: true,
 		})
 	}

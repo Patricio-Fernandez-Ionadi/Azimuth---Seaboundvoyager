@@ -115,10 +115,20 @@ export class NPC {
 		ctx.fillRect(this.x - camera.x, this.y - camera.y, this.width, this.height)
 	}
 
+	/**
+	 * Abre el diálogo con este NPC. Devuelve `true` si la interacción se
+	 * inició correctamente, `false` si fue rechazada (NPC ya en
+	 * interacción o sin contenido que mostrar).
+	 *
+	 * El return permite a CityScene decidir si "consumir" la tecla E o
+	 * reintentarla contra otro NPC. Es importante cuando un NPC cercano
+	 * (p. ej. el mentor ya consumido) ocupa el primer lugar del array
+	 * y bloquearía el ruteo de la tecla a NPCs válidos.
+	 */
 	interact() {
-		if (this.isInteracting) return
+		if (this.isInteracting) return false
 		// Si el NPC ya no tiene nada que mostrar, ignoramos la interacción.
-		if (!this.hasDialog()) return
+		if (!this.hasDialog()) return false
 		this.isInteracting = true
 		// El mentor Silas no se vuelve a auto-disparar tras la primera
 		// interacción (sea manual o auto).
@@ -130,6 +140,7 @@ export class NPC {
 			this.dialogs = this.dialogPhases[this.dialogPhase]
 		}
 		this.game.eventSystem.emit('npcInteracted', this)
+		return true
 	}
 
 	endInteraction() {

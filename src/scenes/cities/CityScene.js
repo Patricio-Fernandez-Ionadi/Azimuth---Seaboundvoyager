@@ -235,20 +235,48 @@ export class CityScene {
 		const playerX = this.game.player.x + this.game.player.width / 2
 		const playerY = this.game.player.y + this.game.player.height / 2
 
+		// 1) Elegir el NPC más cercano que tenga algo que decir y esté
+		//    dentro de rango. Esto evita que un NPC "fantasma" (consumido
+		//    y sin despedida) que esté en el array antes que otros válidos
+		//    consuma la tecla E y bloquee al resto.
+		let targetNpc = null
+		let minDist = Infinity
 		for (const npc of this.npcs) {
-			const canRegularTalk =
-				Math.abs(playerX - npc.x) < 50 && Math.abs(playerY - npc.y) < 50
-			const mentorTalk = npc.id === 'silas' // id estable del mentor
-
-			if (canRegularTalk || mentorTalk) {
-				if (this.keys.onPress.e && !this.keyPressed) {
-					this.keyPressed = true
-					if (!npc.isInteracting) npc.interact()
-					else this.dialogManager.advanceDialogue()
-				}
-			} else {
-				if (npc.isInteracting) this.dialogManager.endDialogue()
+			if (!npc.hasDialog()) continue
+			const inRange =
+				npc.id === 'silas'
+					? npc.isPlayerNear()
+					: Math.abs(playerX - npc.x) < 50 &&
+						Math.abs(playerY - npc.y) < 50
+			if (!inRange) continue
+			const dist = Math.hypot(playerX - npc.x, playerY - npc.y)
+			if (dist < minDist) {
+				targetNpc = npc
+				minDist = dist
 			}
+		}
+
+		// 2) Si el jugador se alejó del NPC con el que estaba hablando,
+		//    cerramos ese diálogo.
+		for (const npc of this.npcs) {
+			if (npc.isInteracting && npc !== targetNpc) {
+				this.dialogManager.endDialogue()
+			}
+		}
+
+		if (!targetNpc) return
+		if (!(this.keys.onPress.e && !this.keyPressed)) return
+
+		if (!targetNpc.isInteracting) {
+			// Sólo consumimos la E si el NPC efectivamente abrió diálogo.
+			// Si no (consumido, sin despedida, etc.), dejamos que la tecla
+			// siga disponible y el jugador pueda reintentarlo.
+			if (targetNpc.interact()) {
+				this.keyPressed = true
+			}
+		} else {
+			this.keyPressed = true
+			this.dialogManager.advanceDialogue()
 		}
 	}
 

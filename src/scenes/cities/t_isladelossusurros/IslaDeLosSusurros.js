@@ -6,9 +6,9 @@ const TILE_SIZE = 16
 
 /**
  * IslaDeLosSusurrosScene
- * ----------------------------------------------------------------------
- * Ciudad/puerto del juego. Hereda de CityScene la cÃ¡mara, los NPCs,
- * las colisiones, el diÃ¡logo y la ventana de comercio.
+ * Distribuida en plataformas: una plataforma central con camino en
+ * espiral, una biblioteca al norte, un mercado de información al sur,
+ * cabaña de la espía al este.
  */
 export class IslaDeLosSusurrosScene extends CityScene {
 	constructor(game, info) {
@@ -18,7 +18,7 @@ export class IslaDeLosSusurrosScene extends CityScene {
 			mapWidth: rawMap[0].length * TILE_SIZE,
 			mapHeight: rawMap.length * TILE_SIZE,
 			startX: 160,
-			startY: 160,
+			startY: 128,
 		})
 	}
 }

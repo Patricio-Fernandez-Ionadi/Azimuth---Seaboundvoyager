@@ -6,9 +6,9 @@ const TILE_SIZE = 16
 
 /**
  * RocaDelTruenoScene
- * ----------------------------------------------------------------------
- * Ciudad/puerto del juego. Hereda de CityScene la cÃ¡mara, los NPCs,
- * las colisiones, el diÃ¡logo y la ventana de comercio.
+ * Pico rocoso: mucha piedra (muro 2) simulando riscos, explanada
+ * central, altar del trueno (biblioteca) al norte, cabaña (taberna) al
+ * sur. Sin muelle.
  */
 export class RocaDelTruenoScene extends CityScene {
 	constructor(game, info) {
@@ -18,7 +18,7 @@ export class RocaDelTruenoScene extends CityScene {
 			mapWidth: rawMap[0].length * TILE_SIZE,
 			mapHeight: rawMap.length * TILE_SIZE,
 			startX: 160,
-			startY: 160,
+			startY: 144,
 		})
 	}
 }

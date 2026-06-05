@@ -6,9 +6,9 @@ const TILE_SIZE = 16
 
 /**
  * VillaTempestadScene
- * ----------------------------------------------------------------------
- * Ciudad/puerto del juego. Hereda de CityScene la cÃ¡mara, los NPCs,
- * las colisiones, el diÃ¡logo y la ventana de comercio.
+ * Pueblo pequeño: casas (taberna al oeste, mercado al este), santuario
+ * del clima (biblioteca) al norte, muelle al sur, plaza central con
+ * camino.
  */
 export class VillaTempestadScene extends CityScene {
 	constructor(game, info) {
@@ -18,7 +18,7 @@ export class VillaTempestadScene extends CityScene {
 			mapWidth: rawMap[0].length * TILE_SIZE,
 			mapHeight: rawMap.length * TILE_SIZE,
 			startX: 160,
-			startY: 160,
+			startY: 96,
 		})
 	}
 }

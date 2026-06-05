@@ -6,9 +6,8 @@ const TILE_SIZE = 16
 
 /**
  * IslaBrumarisScene
- * ----------------------------------------------------------------------
- * Ciudad/puerto del juego. Hereda de CityScene la cÃ¡mara, los NPCs,
- * las colisiones, el diÃ¡logo y la ventana de comercio.
+ * Isla con niebla: caminos entrelazados, círculo de piedras sagrado al
+ * centro, cabaña druida al norte, santuario al sur.
  */
 export class IslaBrumarisScene extends CityScene {
 	constructor(game, info) {

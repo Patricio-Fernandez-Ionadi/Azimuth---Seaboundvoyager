@@ -6,9 +6,9 @@ const TILE_SIZE = 16
 
 /**
  * IslaDelAbismoScene
- * ----------------------------------------------------------------------
- * Ciudad/puerto del juego. Hereda de CityScene la cÃ¡mara, los NPCs,
- * las colisiones, el diÃ¡logo y la ventana de comercio.
+ * Isla con mucho muro rodeando, altar central (camino 9 en círculo),
+ * cabaña del culto (taberna) al norte, biblioteca prohibida al sur,
+ * abismo visible como agua al este.
  */
 export class IslaDelAbismoScene extends CityScene {
 	constructor(game, info) {
@@ -18,7 +18,7 @@ export class IslaDelAbismoScene extends CityScene {
 			mapWidth: rawMap[0].length * TILE_SIZE,
 			mapHeight: rawMap.length * TILE_SIZE,
 			startX: 160,
-			startY: 160,
+			startY: 128,
 		})
 	}
 }

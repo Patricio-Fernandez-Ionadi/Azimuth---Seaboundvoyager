@@ -6,9 +6,9 @@ const TILE_SIZE = 16
 
 /**
  * RefugioCorsarioScene
- * ----------------------------------------------------------------------
- * Ciudad/puerto del juego. Hereda de CityScene la cÃ¡mara, los NPCs,
- * las colisiones, el diÃ¡logo y la ventana de comercio.
+ * Refugio legal de corsarios: muelle al norte, mercado de contratos al
+ * este, taberna "La Carta de Marca" al oeste, oficina de reclutamiento
+ * (biblioteca) al sur.
  */
 export class RefugioCorsarioScene extends CityScene {
 	constructor(game, info) {
@@ -18,7 +18,7 @@ export class RefugioCorsarioScene extends CityScene {
 			mapWidth: rawMap[0].length * TILE_SIZE,
 			mapHeight: rawMap.length * TILE_SIZE,
 			startX: 160,
-			startY: 160,
+			startY: 128,
 		})
 	}
 }

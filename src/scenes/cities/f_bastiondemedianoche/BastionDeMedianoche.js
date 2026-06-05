@@ -6,9 +6,8 @@ const TILE_SIZE = 16
 
 /**
  * BastionDeMedianocheScene
- * ----------------------------------------------------------------------
- * Ciudad/puerto del juego. Hereda de CityScene la cÃ¡mara, los NPCs,
- * las colisiones, el diÃ¡logo y la ventana de comercio.
+ * Fortaleza de la noche: dos patios con camino, biblioteca enorme al
+ * este, taberna al oeste, sin muelle.
  */
 export class BastionDeMedianocheScene extends CityScene {
 	constructor(game, info) {
@@ -18,7 +17,7 @@ export class BastionDeMedianocheScene extends CityScene {
 			mapWidth: rawMap[0].length * TILE_SIZE,
 			mapHeight: rawMap.length * TILE_SIZE,
 			startX: 160,
-			startY: 160,
+			startY: 128,
 		})
 	}
 }

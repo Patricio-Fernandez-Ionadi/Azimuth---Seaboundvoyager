@@ -7,8 +7,8 @@ const TILE_SIZE = 16
 /**
  * BahiaDeLosLamentosScene
  * ----------------------------------------------------------------------
- * Ciudad/puerto del juego. Hereda de CityScene la cÃ¡mara, los NPCs,
- * las colisiones, el diÃ¡logo y la ventana de comercio.
+ * Bahía azotada por naufragios. Muelle al norte, cementerio central
+ * con lápidas, taberna al este.
  */
 export class BahiaDeLosLamentosScene extends CityScene {
 	constructor(game, info) {
@@ -18,7 +18,7 @@ export class BahiaDeLosLamentosScene extends CityScene {
 			mapWidth: rawMap[0].length * TILE_SIZE,
 			mapHeight: rawMap.length * TILE_SIZE,
 			startX: 160,
-			startY: 160,
+			startY: 96,
 		})
 	}
 }

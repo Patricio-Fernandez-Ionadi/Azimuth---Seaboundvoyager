@@ -6,9 +6,9 @@ const TILE_SIZE = 16
 
 /**
  * IslaDeLosNaufragiosScene
- * ----------------------------------------------------------------------
- * Ciudad/puerto del juego. Hereda de CityScene la cÃ¡mara, los NPCs,
- * las colisiones, el diÃ¡logo y la ventana de comercio.
+ * Barcos hundidos como líneas de muro en el agua al este, mercado de
+ * chatarra al oeste, astillero improvisado (taberna) al sur, puesto
+ * del "rastreador" (biblioteca) al norte.
  */
 export class IslaDeLosNaufragiosScene extends CityScene {
 	constructor(game, info) {
@@ -18,7 +18,7 @@ export class IslaDeLosNaufragiosScene extends CityScene {
 			mapWidth: rawMap[0].length * TILE_SIZE,
 			mapHeight: rawMap.length * TILE_SIZE,
 			startX: 160,
-			startY: 160,
+			startY: 112,
 		})
 	}
 }

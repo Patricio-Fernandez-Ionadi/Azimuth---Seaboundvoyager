@@ -6,9 +6,8 @@ const TILE_SIZE = 16
 
 /**
  * MarjalOscuroScene
- * ----------------------------------------------------------------------
- * Ciudad/puerto del juego. Hereda de CityScene la cÃ¡mara, los NPCs,
- * las colisiones, el diÃ¡logo y la ventana de comercio.
+ * Pantano con agua (10) serpenteando, isla central con mercado,
+ * cabaña de la bruja al norte, muelle al sur.
  */
 export class MarjalOscuroScene extends CityScene {
 	constructor(game, info) {
@@ -18,7 +17,7 @@ export class MarjalOscuroScene extends CityScene {
 			mapWidth: rawMap[0].length * TILE_SIZE,
 			mapHeight: rawMap.length * TILE_SIZE,
 			startX: 160,
-			startY: 160,
+			startY: 128,
 		})
 	}
 }

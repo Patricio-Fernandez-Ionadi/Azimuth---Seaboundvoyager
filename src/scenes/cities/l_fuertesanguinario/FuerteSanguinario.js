@@ -6,9 +6,9 @@ const TILE_SIZE = 16
 
 /**
  * FuerteSanguinarioScene
- * ----------------------------------------------------------------------
- * Ciudad/puerto del juego. Hereda de CityScene la cÃ¡mara, los NPCs,
- * las colisiones, el diÃ¡logo y la ventana de comercio.
+ * Fortaleza de los piratas más crueles: muros gruesos, plaza de
+ * ejecuciones central, mercado negro al este, taberna del verdugo al
+ * oeste, mazmorras al norte.
  */
 export class FuerteSanguinarioScene extends CityScene {
 	constructor(game, info) {

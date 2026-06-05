@@ -82,9 +82,15 @@ export class NPC {
 		this.questCapability = this.capabilities.quest ?? null
 	}
 
-	/** ¿El NPC tiene capacidad de diálogo? */
+	/**
+	 * ¿El NPC tiene algo que decir AHORA?
+	 * Devuelve true si:
+	 *   - Tiene contenido principal aún no consumido, o
+	 *   - Tiene despedida pendiente de mostrar.
+	 * Para los one-shot sin despedida, devuelve false tras consumir.
+	 */
 	hasDialog() {
-		return !!this.capabilities.dialog && this.capabilities.dialog.hasContent()
+		return this.capabilities.dialog?.canShowAnything() ?? false
 	}
 
 	/** ¿El NPC ofrece quests disponibles AHORA? */
@@ -110,25 +116,27 @@ export class NPC {
 	}
 
 	interact() {
-		if (!this.isInteracting) {
-			this.isInteracting = true
-			// El mentor Silas no se vuelve a auto-disparar tras la primera
-			// interacción (sea manual o auto).
-			if (this.id === 'silas') this.hasAutoInteracted = true
-			// Sincronizar `this.dialogs` con la fase activa de la capability.
-			if (this.capabilities.dialog) {
-				this.dialogs = this.capabilities.dialog.getActiveDialogs()
-			} else if (this.dialogPhases) {
-				this.dialogs = this.dialogPhases[this.dialogPhase]
-			}
-			this.game.eventSystem.emit('npcInteracted', this)
+		if (this.isInteracting) return
+		// Si el NPC ya no tiene nada que mostrar, ignoramos la interacción.
+		if (!this.hasDialog()) return
+		this.isInteracting = true
+		// El mentor Silas no se vuelve a auto-disparar tras la primera
+		// interacción (sea manual o auto).
+		if (this.id === 'silas') this.hasAutoInteracted = true
+		// Sincronizar `this.dialogs` con la fase activa de la capability.
+		if (this.capabilities.dialog) {
+			this.dialogs = this.capabilities.dialog.getActiveDialogs()
+		} else if (this.dialogPhases) {
+			this.dialogs = this.dialogPhases[this.dialogPhase]
 		}
+		this.game.eventSystem.emit('npcInteracted', this)
 	}
 
 	endInteraction() {
 		this.isInteracting = false
-		if (this.capabilities.dialog) {
-			this.capabilities.dialog.advancePhase()
+		const dialogCap = this.capabilities.dialog
+		if (dialogCap) {
+			dialogCap.advancePhase()
 		} else if (this.dialogPhases) {
 			this.dialogPhase = Math.min(
 				this.dialogPhase + 1,

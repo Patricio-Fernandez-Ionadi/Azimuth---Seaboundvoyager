@@ -398,7 +398,7 @@ export class QuestManager {
 	 * ============================================================ */
 
 	bindEvents() {
-		this.eventSystem.on('npcInteracted', ({ npc }) => {
+		this.eventSystem.on('npcInteracted', (npc) => {
 			// Auto-arranque: si el NPC ofrece quests disponibles y no
 			// están activas aún, las iniciamos automáticamente.
 			if (npc?.questCapability?.offerableQuests) {

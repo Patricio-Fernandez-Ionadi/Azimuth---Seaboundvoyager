@@ -86,6 +86,12 @@ export default [
 				next: 'end',
 			},
 		],
+		// Silas es one-shot (por tipo 'mentor'). Esta despedida se muestra
+		// una vez tras elegir el objeto y, después, el NPC queda mudo.
+		farewellDialogs: [
+			'Buena suerte, Elian. El puerto es grande y el mar, más aún.',
+			'Si el destino te devuelve a este muelle, que sea con historias que valga la pena contar.',
+		],
 	},
 
 	// ─────────────────────────────────────────────────────────────
@@ -97,6 +103,7 @@ export default [
 		x: 320,
 		y: 560,
 		type: 'quest',
+		oneShot: true,
 		quests: ['taberna_intro'],
 		dialogs: [
 			'¡Ja! Otro lobo de mar con cara de no saber dónde se metió.',
@@ -121,6 +128,7 @@ export default [
 				],
 			},
 		],
+		farewellDialogs: ['Ya sabes a qué atenerte, lobo de mar. No esperes mi sympathía dos veces.'],
 	},
 
 	// ─────────────────────────────────────────────────────────────
@@ -132,6 +140,7 @@ export default [
 		x: 992,
 		y: 560,
 		type: 'quest',
+		oneShot: true,
 		quests: ['mercado_intro'],
 		dialogs: [
 			'Buenos días. ¿Viene por asuntos del Gremio o solo de paso?',
@@ -157,6 +166,7 @@ export default [
 				],
 			},
 		],
+		farewellDialogs: ['El Gremio no olvida. Ni las firmas, ni los silencios.'],
 	},
 
 	// ─────────────────────────────────────────────────────────────
@@ -168,6 +178,7 @@ export default [
 		x: 1600,
 		y: 560,
 		type: 'quest',
+		oneShot: true,
 		quests: ['biblioteca_intro'],
 		dialogs: [
 			'¿Escuchas eso? Son los susurros de los textos que nadie lee.',
@@ -193,6 +204,7 @@ export default [
 				],
 			},
 		],
+		farewellDialogs: ['Los textos susurran a quien sabe escuchar. No los hagas esperar.'],
 	},
 
 	// ─────────────────────────────────────────────────────────────

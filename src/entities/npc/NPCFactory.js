@@ -19,6 +19,12 @@
  * `type` (opcional): clasifica al NPC para asignar un color por defecto.
  * Valores soportados: 'mentor' | 'quest' | 'shop' | 'dialog' | 'static'.
  * Si se pasa `color` explícito, tiene prioridad sobre el del tipo.
+ *
+ * `oneShot` (opcional, boolean): marca al NPC como "único". Tras la
+ * primera interacción cerrada, su diálogo principal deja de estar
+ * disponible. Si además se define `farewellDialogs`, mostrará esa
+ * despedida en visitas posteriores. Por defecto, los NPCs de tipo
+ * 'mentor' son one-shot.
  */
 
 import { NPC } from '../NPC.js'
@@ -35,6 +41,9 @@ export const NPC_TYPE_COLORS = {
 	static: 'slategray',
 }
 
+/** Tipo de NPC que es one-shot por defecto. */
+const ONE_SHOT_BY_DEFAULT = new Set(['mentor'])
+
 /**
  * @param {Object} data   Configuración del NPC (ver formato arriba).
  * @param {Object} game   Referencia al juego.
@@ -42,6 +51,7 @@ export const NPC_TYPE_COLORS = {
  */
 export function createNPC(data, game) {
 	const resolvedColor = data.color ?? NPC_TYPE_COLORS[data.type] ?? 'white'
+	const resolvedOneShot = data.oneShot ?? ONE_SHOT_BY_DEFAULT.has(data.type)
 
 	const npc = new NPC({
 		x: data.x,
@@ -60,6 +70,8 @@ export function createNPC(data, game) {
 							dialogs: data.dialogs,
 							dialogPhases: data.dialogPhases,
 							startPhase: data.startPhase,
+							oneShot: resolvedOneShot,
+							farewellDialogs: data.farewellDialogs,
 					  }
 					: null,
 			quest:

@@ -20,6 +20,11 @@
  * La aplicación de efectos se delega a QuestManager.applyEffect cuando
  * es posible, pero el manager también los aplica directamente para
  * opciones que no son parte de una quest.
+ *
+ * Modo "despedida": cuando un NPC con oneShot ya consumió su diálogo
+ * principal, al volverse a interactuar se muestran sus `farewellDialogs`
+ * como una secuencia de strings lineales (sin opciones, sin effects).
+ * Tras mostrarla, el NPC queda en estado 'done' y no hablará más.
  */
 
 export class DialogManager {
@@ -31,6 +36,13 @@ export class DialogManager {
 		this.selectedOptionIndex = 0
 		this.currentMessage = null
 		this.currentOptions = null
+		// true cuando el diálogo llegó a su fin natural (jump a 'end' o
+		// índice pasado el último nodo). Distingue "terminé" de "salí
+		// caminando / presioné escape".
+		this.dialogReachedEnd = false
+		// Modo despedida: true mientras se está mostrando la despedida
+		// one-shot del NPC.
+		this.isFarewell = false
 	}
 
 	/* ============================================================
@@ -41,12 +53,23 @@ export class DialogManager {
 		this.currentNPC = npc
 		this.currentMessageIndex = 0
 		this.selectedOptionIndex = 0
+		this.dialogReachedEnd = false
+
+		const dialogCap = npc.capabilities?.dialog
+		// Si el NPC ya consumió su diálogo principal y tiene despedida
+		// pendiente, entramos en modo despedida.
+		if (dialogCap?.hasPendingFarewell()) {
+			this.isFarewell = true
+		} else {
+			this.isFarewell = false
+		}
 		this.#showNode()
 	}
 
 	/**
 	 * Avanza el diálogo desde el estado actual.
 	 * Llamado cuando el jugador presiona E con un NPC en interacción.
+	 * - Si estamos en despedida, avanza por las líneas o cierra al final.
 	 * - Si el nodo actual tiene `next` (no opciones), salta al target.
 	 * - Si el nodo actual es de opciones, no hace nada (debe elegir).
 	 * - En otro caso, incrementa el índice y muestra el siguiente.
@@ -54,8 +77,22 @@ export class DialogManager {
 	advanceDialogue() {
 		if (!this.currentNPC) return
 
+		// Modo despedida: avance lineal de strings sin opciones.
+		if (this.isFarewell) {
+			const queue = this.currentNPC.capabilities?.dialog?.farewellDialogs ?? []
+			this.currentMessageIndex += 1
+			if (this.currentMessageIndex >= queue.length) {
+				this.dialogReachedEnd = true
+				this.endDialogue()
+			} else {
+				this.#showNode()
+			}
+			return
+		}
+
 		const node = this.currentNPC.dialogs[this.currentMessageIndex]
 		if (!node) {
+			this.dialogReachedEnd = true
 			this.endDialogue()
 			return
 		}
@@ -78,8 +115,23 @@ export class DialogManager {
 	#showNode() {
 		if (!this.currentNPC) return
 
+		// Modo despedida: usar el array farewellDialogs.
+		if (this.isFarewell) {
+			const queue = this.currentNPC.capabilities?.dialog?.farewellDialogs ?? []
+			const line = queue[this.currentMessageIndex]
+			if (line == null) {
+				this.dialogReachedEnd = true
+				this.endDialogue()
+				return
+			}
+			this.currentMessage = line
+			this.currentOptions = null
+			return
+		}
+
 		const node = this.currentNPC.dialogs[this.currentMessageIndex]
 		if (!node) {
+			this.dialogReachedEnd = true
 			this.endDialogue()
 			return
 		}
@@ -97,12 +149,30 @@ export class DialogManager {
 	/** Cierra el diálogo y notifica al NPC. */
 	endDialogue() {
 		if (this.currentNPC) {
-			this.currentNPC.endInteraction()
+			const npc = this.currentNPC
+			const dialogCap = npc.capabilities?.dialog
+
+			// Transiciones de estado del one-shot:
+			// - Si la despedida terminó, marcarla como hecha.
+			// - Si el diálogo principal terminó y el NPC es one-shot,
+			//   marcar consumido (pasa a 'consumed' o 'done' según
+			//   tenga despedida).
+			if (dialogCap?.oneShot) {
+				if (this.isFarewell && this.dialogReachedEnd) {
+					dialogCap.markFarewellDone()
+				} else if (!this.isFarewell && this.dialogReachedEnd) {
+					dialogCap.markConsumed()
+				}
+			}
+
+			npc.endInteraction()
 			this.currentNPC = null
 			this.currentMessageIndex = 0
 			this.selectedOptionIndex = 0
 			this.currentMessage = null
 			this.currentOptions = null
+			this.dialogReachedEnd = false
+			this.isFarewell = false
 		}
 	}
 
@@ -238,6 +308,7 @@ export class DialogManager {
 			return
 		}
 		if (next === 'end') {
+			this.dialogReachedEnd = true
 			this.endDialogue()
 			return
 		}

@@ -173,6 +173,7 @@ export class CityScene {
 	update() {
 		this.checkNPCInteraction()
 		this.handleNPCOptions()
+		this.dialogManager.update()
 		this.game.player.update(this.collisions)
 		this.camera.update()
 		this.#listenKeyRelease()
@@ -196,8 +197,7 @@ export class CityScene {
 
 		if (!this.game.player.menuGame.isOpen) this.map_button.draw(ctx)
 
-		this.dialogManager.renderDialogBox()
-		this.dialogManager.renderOptionsBox()
+		this.dialogManager.render()
 
 		if (this.tradeWindow && this.game.player.inventory.tradeMode) {
 			this.tradeWindow.draw(ctx)

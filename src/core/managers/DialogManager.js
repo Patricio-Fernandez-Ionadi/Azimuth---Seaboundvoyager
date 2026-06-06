@@ -16,9 +16,11 @@
  *   `effects`   : [ { type:'affinity'|'skillXP'|'item'|'gold'|'startQuest'|'progressQuest'|'flag', ... } ]
  *   `next`      : índice numérico (jump) o 'end' (cerrar diálogo).
  *
- * La presentación gráfica (caja de texto, opciones) la hace este manager.
- * La aplicación de efectos se delega a QuestManager.applyEffect cuando
- * es posible, pero el manager también los aplica directamente para
+ * La presentación gráfica (caja de texto + opciones) la hace este manager
+ * con un único método `render()`: la altura se calcula dinámicamente para
+ * que el texto wrappee, las opciones quepan, y la caja nunca salga del
+ * viewport. La aplicación de efectos se delega a QuestManager.applyEffect
+ * cuando es posible, pero el manager también los aplica directamente para
  * opciones que no son parte de una quest.
  *
  * Modo "despedida": cuando un NPC con oneShot ya consumió su diálogo
@@ -26,6 +28,8 @@
  * como una secuencia de strings lineales (sin opciones, sin effects).
  * Tras mostrarla, el NPC queda en estado 'done' y no hablará más.
  */
+
+import { fontStyles } from '../fonts.js'
 
 export class DialogManager {
 	constructor(game) {
@@ -332,53 +336,332 @@ export class DialogManager {
 	}
 
 	/* ============================================================
-	 * Render (sin cambios significativos; caja simple)
+	 * Update (input handling que no sea handled por CityScene)
 	 * ============================================================ */
 
-	renderDialogBox() {
-		if (!this.currentMessage) return
-		const { ctx } = this.game
-
-		const padding = 20
-		const boxWidth = 400
-		const boxHeight = 100
-		const x = (this.game.width - boxWidth) / 2
-		const y = this.game.height - boxHeight - padding
-
-		ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-		ctx.fillRect(x, y, boxWidth, boxHeight)
-
-		ctx.save()
-		ctx.fillStyle = 'white'
-		ctx.font = '16px Arial'
-		ctx.fillText(this.currentMessage, x + padding, y + padding + 20)
-		ctx.restore()
-	}
-
-	renderOptionsBox() {
-		if (!this.currentOptions) return
-		const { ctx } = this.game
-
-		const padding = 20
-		const boxWidth = 400
-		const boxHeight = 20 + this.currentOptions.length * 30
-		const x = (this.game.width - boxWidth) / 2
-		const y = this.game.height - 50 - padding
-
-		ctx.fillStyle = 'rgba(228, 7, 7, 0.62)'
-		ctx.fillRect(x, y, boxWidth, boxHeight)
-
-		ctx.save()
-		this.currentOptions.forEach((option, index) => {
-			ctx.fillStyle = this.selectedOptionIndex === index ? 'yellow' : 'white'
-			ctx.font = '16px Arial'
-			const text = option.text ?? option.label ?? '(sin texto)'
-			ctx.fillText(text, x + padding, y + padding + 30 * index)
-		})
-		ctx.restore()
-
+	update() {
+		if (!this.currentNPC) return
+		// Escape cierra el diálogo activo (antes vivía en renderOptionsBox,
+		// pero mezclar input y render es una trampa).
 		if (this.game.keyboard.onPress.escape) {
 			this.endDialogue()
 		}
+	}
+
+	/* ============================================================
+	 * Render: caja unificada con word-wrap, opciones y nombre del NPC
+	 * ============================================================ */
+
+	render() {
+		if (!this.currentMessage && !this.currentOptions) return
+		const { ctx } = this.game
+
+		/* --- Tipografía y métricas --- */
+		const BODY_SIZE = 18
+		const NAME_SIZE = 16
+		const OPTION_SIZE = 18
+		const HINT_SIZE = 11
+
+		const BODY_FONT = `${BODY_SIZE}px ${fontStyles.body.name}, Arial, sans-serif`
+		const NAME_FONT = `bold ${NAME_SIZE}px ${fontStyles.body.name}, Arial, sans-serif`
+		const OPTION_FONT = `${OPTION_SIZE}px ${fontStyles.body.name}, Arial, sans-serif`
+		const HINT_FONT = `${HINT_SIZE}px Arial, sans-serif`
+
+		const LINE_H = BODY_SIZE + 6
+		const OPTION_H = OPTION_SIZE + 10
+		const HEADER_H = 30
+		const FOOTER_H = 16
+		const NAME_GAP = 10
+		const MSG_GAP = 12
+		const OPTION_GAP = 10
+		const FOOTER_GAP = 12
+		const INNER_PADDING = 18
+
+		/* --- Ancho de la caja (entre 320 y 640, pero siempre deja margen) --- */
+		const minWidth = 320
+		const maxWidth = 640
+		const boxWidth = Math.max(
+			minWidth,
+			Math.min(maxWidth, this.game.width - 40),
+		)
+		const textMaxWidth = boxWidth - INNER_PADDING * 2
+
+		/* --- Word-wrap del mensaje --- */
+		ctx.font = BODY_FONT
+		const messageLines = this.#wrapText(
+			ctx,
+			this.currentMessage ?? '',
+			textMaxWidth,
+		)
+
+		/* --- Cálculo de altura --- */
+		const npcName = this.#getNPCName()
+		let contentH = 0
+		if (npcName) contentH += HEADER_H + NAME_GAP
+		contentH += messageLines.length * LINE_H
+		if (this.currentOptions) {
+			contentH += MSG_GAP + 1 + OPTION_GAP
+			contentH += this.currentOptions.length * OPTION_H
+		}
+		contentH += FOOTER_GAP + FOOTER_H
+
+		const boxHeight = contentH + INNER_PADDING * 2
+
+		/* --- Posición: centrada horizontal, pegada al fondo ---
+		 * Si la caja es más alta que el viewport, la subimos hasta el top
+		 * (y se pierde la gracia, pero al menos se ve todo). */
+		const x = Math.round((this.game.width - boxWidth) / 2)
+		let y = this.game.height - boxHeight - 20
+		if (y < 20) y = 20
+
+		/* --- Paleta --- */
+		const C = {
+			bg: 'rgba(22, 16, 8, 0.94)',
+			bgShadow: 'rgba(0, 0, 0, 0.55)',
+			borderOuter: '#5a3a1a',
+			borderInner: '#d4a548',
+			nameBg: '#d4a548',
+			nameFg: '#1a0e05',
+			divider: 'rgba(212, 165, 72, 0.45)',
+			msg: '#f4e4c1',
+			msgShadow: 'rgba(0, 0, 0, 0.8)',
+			optIdle: '#c9b896',
+			optSelected: '#ffd700',
+			optSelectedBg: 'rgba(212, 165, 72, 0.18)',
+			hint: '#8a7d5e',
+			hintKey: '#d4a548',
+		}
+
+		ctx.save()
+
+		/* Sombra suave */
+		ctx.fillStyle = C.bgShadow
+		this.#roundRect(ctx, x + 3, y + 5, boxWidth, boxHeight, 6)
+		ctx.fill()
+
+		/* Fondo del pergamino */
+		ctx.fillStyle = C.bg
+		this.#roundRect(ctx, x, y, boxWidth, boxHeight, 6)
+		ctx.fill()
+
+		/* Borde externo (marrón) + interno (oro) */
+		ctx.lineJoin = 'round'
+		ctx.strokeStyle = C.borderOuter
+		ctx.lineWidth = 2
+		this.#roundRect(ctx, x, y, boxWidth, boxHeight, 6)
+		ctx.stroke()
+
+		ctx.strokeStyle = C.borderInner
+		ctx.lineWidth = 1
+		this.#roundRect(ctx, x + 4, y + 4, boxWidth - 8, boxHeight - 8, 4)
+		ctx.stroke()
+
+		/* Cursor vertical de "avance" */
+		let curY = y + INNER_PADDING
+
+		/* --- Nombre del NPC (pildora dorada) --- */
+		if (npcName) {
+			ctx.font = NAME_FONT
+			const nameTextWidth = Math.min(
+				ctx.measureText(npcName).width + 24,
+				boxWidth - INNER_PADDING * 2,
+			)
+
+			// Sutil sombra de la pildora
+			ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
+			this.#roundRect(ctx, x + 1, curY + 2, nameTextWidth, HEADER_H, 4)
+			ctx.fill()
+
+			// Pildora
+			const grad = ctx.createLinearGradient(x, curY, x, curY + HEADER_H)
+			grad.addColorStop(0, '#e8b85a')
+			grad.addColorStop(1, '#b8881e')
+			ctx.fillStyle = grad
+			this.#roundRect(ctx, x, curY, nameTextWidth, HEADER_H, 4)
+			ctx.fill()
+
+			// Texto
+			ctx.fillStyle = C.nameFg
+			ctx.textBaseline = 'middle'
+			ctx.textAlign = 'left'
+			ctx.fillText(npcName, x + 12, curY + HEADER_H / 2 + 1)
+			ctx.textBaseline = 'alphabetic'
+
+			curY += HEADER_H + NAME_GAP
+		}
+
+		/* --- Mensaje (con word-wrap y sombra) --- */
+		ctx.font = BODY_FONT
+		ctx.textAlign = 'left'
+		for (let i = 0; i < messageLines.length; i++) {
+			const baselineY = curY + BODY_SIZE + 2
+			ctx.fillStyle = C.msgShadow
+			ctx.fillText(messageLines[i], x + INNER_PADDING + 1, baselineY + 1)
+			ctx.fillStyle = C.msg
+			ctx.fillText(messageLines[i], x + INNER_PADDING, baselineY)
+			curY += LINE_H
+		}
+
+		/* --- Opciones (separador + filas) --- */
+		if (this.currentOptions) {
+			curY += MSG_GAP
+			ctx.strokeStyle = C.divider
+			ctx.lineWidth = 1
+			ctx.beginPath()
+			ctx.moveTo(x + INNER_PADDING, curY + 0.5)
+			ctx.lineTo(x + boxWidth - INNER_PADDING, curY + 0.5)
+			ctx.stroke()
+			curY += 1 + OPTION_GAP
+
+			for (let i = 0; i < this.currentOptions.length; i++) {
+				const opt = this.currentOptions[i]
+				const text = opt.text ?? opt.label ?? '(sin texto)'
+				const isSelected = i === this.selectedOptionIndex
+				const rowY = curY
+
+				// Highlight de fila seleccionada
+				if (isSelected) {
+					ctx.fillStyle = C.optSelectedBg
+					this.#roundRect(
+						ctx,
+						x + INNER_PADDING - 4,
+						rowY + 1,
+						boxWidth - INNER_PADDING * 2 + 8,
+						OPTION_H - 4,
+						4,
+					)
+					ctx.fill()
+				}
+
+				ctx.font = OPTION_FONT
+
+				// Cursor ▶ para la fila activa
+				const cursor = isSelected ? '▶' : ' '
+				ctx.fillStyle = isSelected ? C.optSelected : 'rgba(201, 184, 150, 0.25)'
+				ctx.textBaseline = 'alphabetic'
+				ctx.fillText(cursor, x + INNER_PADDING, rowY + OPTION_SIZE + 1)
+
+				// Texto de la opción (con sombra si está seleccionada)
+				const textX = x + INNER_PADDING + 22
+				const textY = rowY + OPTION_SIZE + 1
+				if (isSelected) {
+					ctx.fillStyle = C.msgShadow
+					ctx.fillText(text, textX + 1, textY + 1)
+					ctx.fillStyle = C.optSelected
+				} else {
+					ctx.fillStyle = C.optIdle
+				}
+				ctx.fillText(text, textX, textY)
+
+				curY += OPTION_H
+			}
+		}
+
+		/* --- Footer con atajos --- */
+		curY += FOOTER_GAP
+		ctx.font = HINT_FONT
+		const hints = []
+		if (this.currentOptions) {
+			hints.push({ label: 'Q', text: 'Elegir' })
+		} else {
+			hints.push({ label: 'E', text: 'Avanzar' })
+		}
+		hints.push({ label: 'W/S', text: 'Navegar' })
+		hints.push({ label: 'Esc', text: 'Cerrar' })
+
+		// Calcular ancho total y centrar
+		const hintParts = []
+		let totalHintWidth = 0
+		for (const h of hints) {
+			ctx.font = HINT_FONT
+			const labelW = ctx.measureText(h.label).width
+			const textW = ctx.measureText(h.text).width
+			const partWidth = labelW + 4 + textW
+			hintParts.push({ ...h, labelW, textW, partWidth })
+			totalHintWidth += partWidth
+			if (h !== hints[hints.length - 1]) totalHintWidth += 28
+		}
+
+		let hintX = x + (boxWidth - totalHintWidth) / 2
+		const hintY = curY + HINT_SIZE
+		for (let i = 0; i < hintParts.length; i++) {
+			const p = hintParts[i]
+			ctx.fillStyle = C.hintKey
+			ctx.fillText(p.label, hintX, hintY)
+			hintX += p.labelW + 4
+			ctx.fillStyle = C.hint
+			ctx.fillText(p.text, hintX, hintY)
+			hintX += p.textW
+			if (i < hintParts.length - 1) {
+				const sep = '·'
+				ctx.fillStyle = C.hint
+				ctx.fillText(sep, hintX + 6, hintY)
+				hintX += 28
+			}
+		}
+
+		ctx.restore()
+	}
+
+	/* ============================================================
+	 * Helpers privados
+	 * ============================================================ */
+
+	/**
+	 * Word-wrap de un texto a varias líneas que no excedan `maxWidth`
+	 * (en píxeles) según la fuente actual del contexto. Respeta los
+	 * saltos de línea explícitos (`\n`).
+	 */
+	#wrapText(ctx, text, maxWidth) {
+		if (!text) return []
+		const lines = []
+		for (const paragraph of text.split(/\n/)) {
+			const words = paragraph.split(/\s+/).filter((w) => w.length > 0)
+			let current = ''
+			for (const word of words) {
+				const test = current ? `${current} ${word}` : word
+				if (ctx.measureText(test).width > maxWidth && current) {
+					lines.push(current)
+					current = word
+				} else {
+					current = test
+				}
+			}
+			if (current) lines.push(current)
+		}
+		return lines
+	}
+
+	/** Nombre legible del NPC. Prioriza `npc.name`, luego deriva de `id`. */
+	#getNPCName() {
+		if (!this.currentNPC) return null
+		if (this.currentNPC.name) return this.currentNPC.name
+		const id = this.currentNPC.id
+		if (!id) return null
+		return String(id)
+			.split('_')
+			.map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+			.join(' ')
+	}
+
+	/**
+	 * Dibuja un rectángulo con esquinas redondeadas en el contexto.
+	 * `r` puede ser un número (todas las esquinas) o [tl, tr, br, bl].
+	 * NO llama a fill/stroke; deja el path listo para que el caller
+	 * pinte.
+	 */
+	#roundRect(ctx, x, y, w, h, r) {
+		const rr = typeof r === 'number' ? [r, r, r, r] : r
+		ctx.beginPath()
+		ctx.moveTo(x + rr[0], y)
+		ctx.lineTo(x + w - rr[1], y)
+		ctx.arcTo(x + w, y, x + w, y + rr[1], rr[1])
+		ctx.lineTo(x + w, y + h - rr[2])
+		ctx.arcTo(x + w, y + h, x + w - rr[2], y + h, rr[2])
+		ctx.lineTo(x + rr[3], y + h)
+		ctx.arcTo(x, y + h, x, y + h - rr[3], rr[3])
+		ctx.lineTo(x, y + rr[0])
+		ctx.arcTo(x, y, x + rr[0], y, rr[0])
+		ctx.closePath()
 	}
 }

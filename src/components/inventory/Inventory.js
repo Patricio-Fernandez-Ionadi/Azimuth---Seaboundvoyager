@@ -41,6 +41,18 @@ export class Inventory {
 		this.renderItemDragging(ctx)
 	}
 
+	/**
+	 * Dibuja SOLO el tooltip del item en hover (si hay). Pensado para
+	 * llamarse DESPUÉS de dibujar todos los inventarios, así el tooltip
+	 * queda por encima de cualquier otro inventario y no se "esconde"
+	 * detrás de él cuando están cerca.
+	 */
+	drawTooltip() {
+		if (!this.hoveredSlot || !this.hoveredSlot.item) return
+		const { ctx } = this.game
+		this.#drawTooltip(ctx, this.hoveredSlot.item)
+	}
+
 	/* ###### Events ###### */
 	mouseDown(mouseX, mouseY, e) {
 		this.handleItemActionOnClick(mouseX, mouseY)
@@ -226,12 +238,10 @@ export class Inventory {
 				this.slots[row][col].draw(ctx)
 			}
 		}
-		// Dibujar tooltip si hay un slot con hover
-		if (this.hoveredSlot && this.hoveredSlot.item) {
-			this.drawTooltip(ctx, this.hoveredSlot.item)
-		}
+		/* El tooltip ya no se dibuja acá: se llama vía `drawTooltip()`
+		 * desde el caller, después de dibujar todos los inventarios. */
 	}
-	drawTooltip(ctx, item) {
+	#drawTooltip(ctx, item) {
 		const price =
 			this.owner instanceof Player ? item.price.sell : item.price.buy
 		const quality = item.itemQuality ?? item.quality

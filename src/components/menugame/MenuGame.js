@@ -208,6 +208,9 @@ export class MenuGame {
 		 * propio de cada tab. */
 		if (this._drawInventory && this.selectedTab === 'Inventario') {
 			this.player.inventory.draw()
+			/* Tooltip por encima de todo (incluyendo el panel si el
+			 * item está cerca del borde). */
+			this.player.inventory.drawTooltip()
 		}
 	}
 

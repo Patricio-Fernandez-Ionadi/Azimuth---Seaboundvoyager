@@ -15,6 +15,16 @@ export class CustomCursor {
 		this.game.canvas.addEventListener('mousedown', (e) => this.mouseDown(e))
 		this.game.canvas.addEventListener('mouseup', (e) => this.mouseUp(e))
 		this.game.canvas.addEventListener('mousemove', (e) => this.mouseMove(e))
+		this.game.canvas.addEventListener('wheel', (e) => this.wheel(e), {
+			passive: false,
+		})
+	}
+
+	wheel(e) {
+		e.preventDefault()
+		const activeScene = this.game.sceneManager.activeScene
+		if (activeScene) activeScene.wheel?.(e)
+		this.game.player.wheel?.(e)
 	}
 
 	/* Events */

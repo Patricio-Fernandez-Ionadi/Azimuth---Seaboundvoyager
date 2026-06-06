@@ -1,5 +1,6 @@
 import { Player } from '../../entities/player.js'
-import { Text } from '../Text.js'
+import { Tooltip } from '../Tooltip.js'
+import { THEME } from '../theme.js'
 import { Slot } from './Slot.js'
 
 export class Inventory {
@@ -231,55 +232,46 @@ export class Inventory {
 		}
 	}
 	drawTooltip(ctx, item) {
-		const width = 200
-		let height = 30
-		const padding = 10
-		const margin = 20
-		const size = 20
-		const lineHeight = 18
-		const tooltipX = this.hoveredSlot.x /* + this.slotSize + margin */
-		const tooltipY = this.hoveredSlot.y + this.slotSize + margin
-		const x = tooltipX + padding
-		const y = tooltipY + padding
-
 		const price =
 			this.owner instanceof Player ? item.price.sell : item.price.buy
-		const quality = item.quality
+		const quality = item.itemQuality ?? item.quality
+		const qualityColor =
+			quality === 'excellent'
+				? '#9be58a'
+				: quality === 'rare'
+					? '#c98fff'
+					: THEME.text
 
-		const info = [
-			{ label: item.name, y: y + lineHeight },
-			{ label: item.description, y: y + lineHeight * 2 },
+		const lines = [
+			{ label: item.name, size: 16, color: THEME.selected, weight: 'bold' },
+			{ label: item.description, size: 12, color: THEME.textDim },
 			{
-				label: 'Precio de venta: $' + price,
-				y: y + lineHeight * 3,
+				label: `Precio de venta: $${price}`,
+				size: 12,
+				color: THEME.textDim,
 			},
-			{
-				label: quality,
-				color:
-					quality === 'excellent'
-						? 'lightgreen'
-						: quality === 'rare'
-							? 'violet'
-							: 'white',
-				y: y + lineHeight * 4,
-			},
+			{ label: quality, size: 12, color: qualityColor, weight: 'bold' },
 		]
-
-		if (item.categories.includes('contraband')) {
-			info.push({
-				label: 'Objeto ilegal.',
-				y: y + lineHeight * 5,
-				color: 'red',
+		if (item.categories?.includes('contraband')) {
+			lines.push({
+				label: 'Objeto ilegal',
+				size: 12,
+				color: '#ff5b5b',
+				weight: 'bold',
 			})
 		}
-		// podriamos ver si el item tiene stats tambien para mostrar
 
-		height = padding * 2 + lineHeight * info.length
-
-		// Fondo del tooltip
-		ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-		ctx.fillRect(tooltipX, tooltipY, width, height)
-
-		info.forEach((e) => Text({ x, size, ctx, ...e }))
+		new Tooltip({
+			x: this.hoveredSlot.x,
+			y: this.hoveredSlot.y + this.slotSize,
+			align: 'top-left',
+			viewport: { width: this.game.width, height: this.game.height },
+			margin: 20,
+			minWidth: 200,
+			maxWidth: 260,
+			padding: 10,
+			lineGap: 4,
+			lines,
+		}).draw(ctx)
 	}
 }

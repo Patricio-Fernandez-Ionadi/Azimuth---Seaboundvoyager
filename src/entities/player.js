@@ -358,6 +358,11 @@ export class Player {
 		}
 		this.inventory.mouseMove(mouseX, mouseY, e)
 	}
+	wheel(e) {
+		if (this.menuGame.isOpen) {
+			this.menuGame.wheel(e)
+		}
+	}
 	updateInputs() {
 		if (!this.game.keyboard.pressed) this.keyPressed = false
 		const keyPressed = this.game.keyboard.onPress

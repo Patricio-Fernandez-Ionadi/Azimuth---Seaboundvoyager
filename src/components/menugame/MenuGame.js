@@ -1,437 +1,552 @@
+import { Panel } from '../Panel.js'
+import { Tabs } from '../Tabs.js'
+import { ScrollableArea } from '../ScrollableArea.js'
 import { Text } from '../Text.js'
+import { THEME } from '../theme.js'
+import { fontStyles } from '../../core/fonts.js'
 
 const TABS = ['Inventario', 'Crear', 'Estadisticas', 'Misiones', 'Logros']
+
+/**
+ * MenuGame
+ * ----------------------------------------------------------------------
+ * Menú in-game con tabs (Inventario, Crear, Estadísticas, Misiones,
+ * Logros). La caja exterior es un `Panel` temático (sin pildora: la
+ * tab activa indica la sección). La tira de tabs es el componente
+ * `Tabs`. El contenido de los tabs que pueden exceder el alto del
+ * panel (Estadísticas, Misiones) usa un `ScrollableArea` con scrollbar
+ * y soporte para rueda del mouse.
+ *
+ * Geometría:
+ *   x = (W - 0.9*W) / 2  →  centrado
+ *   width = 0.9 * W
+ *   height = 0.9 * H
+ *
+ * Animación: el menu desliza horizontalmente modificando `this.x` (sin
+ * usar `ctx.translate`), de modo que las coordenadas de mouse y de
+ * dibujo siempre coinciden. El inventario del jugador se reposiciona
+ * solo cuando el menu llega a su posición final.
+ */
 export class MenuGame {
-  constructor(player) {
-    this.player = player
-    this.game = player.game
-    this.c = player.game.ctx
-    this.isOpen = false
-    this.tabs = TABS
-    this.defaultSelected = this.tabs[0]
-    this.selectedTab = this.defaultSelected
-    this.width = this.game.width * 0.9
-    this.height = this.game.height * 0.9
-    this.x = this.game.width * 0.05
-    this.y = this.game.height * 0.05
-    this.container = {
-      header: {
-        height: 60,
-        tab: { width: this.width / this.tabs.length },
-      },
-      content: {},
-    }
-    this.targetX = this.game.width * 0.05
-    this.currentX = this.game.width
-    this.animationSpeed = 45
+	constructor(player) {
+		this.player = player
+		this.game = player.game
+		this.c = player.game.ctx
+		this.isOpen = false
+		this.tabs = new Tabs({
+			tabs: TABS,
+			selected: 0,
+			onSelect: (i) => {
+				this.selectedTab = TABS[i]
+				this.#resetScroll()
+			},
+		})
+		this.selectedTab = TABS[0]
 
-    this.game.eventSystem.on('toggle_menugame', () => {
-      this.toggle()
-    })
-  }
+		/* Geometría de la caja del menú (centrado) */
+		this.width = this.game.width * 0.9
+		this.height = this.game.height * 0.9
+		this.targetX = (this.game.width - this.width) / 2
+		this.x = this.game.width + 10 /* empieza fuera, a la derecha */
+		this.y = (this.game.height - this.height) / 2
 
-  update() {
-    if (this.isOpen) {
-      // Animación para abrir el menú
-      if (this.currentX > this.targetX) {
-        this.currentX -= this.animationSpeed
-      }
-    } else {
-      // Animación para cerrar el menú
-      // if (this.currentX < this.x + this.width + 20) {
-      if (this.currentX < this.game.width + 10) {
-        this.currentX += this.animationSpeed
-      }
-    }
-  }
+		/* Layout interno */
+		this.padding = 14
+		this.tabHeight = 36
+		this.tabsGap = 8
+		this.trashSize = 56
 
-  render() {
-    this.c.save()
-    this.c.translate(this.currentX, 0)
-    this.#container()
-    this.#header()
-    this.#menuContent()
-    this.c.restore()
-  }
+		/* Animación: actualiza this.x directamente */
+		this.animationSpeed = 45
 
-  toggle() {
-    this.isOpen = !this.isOpen
+		/* Estado del inventario: solo se dibuja cuando el menu está
+		 * abierto. Cerrado → oculto (no se ve en el HUD). */
+		this._drawInventory = false
 
-    if (this.isOpen) {
-      const rows = 10
-      const cols = 8
-      const slotSize = this.container.content.height / rows
+		/* Scroll: un ScrollableArea por tab que pueda overflowear. */
+		this._scrollAreas = {}
 
-      this.player.inventory.slotSize = slotSize
-      this.player.inventory.y = this.y + 60
-      this.player.inventory.x = this.x + this.width - slotSize * cols
+		this.game.eventSystem.on('toggle_menugame', () => {
+			this.toggle()
+		})
+	}
 
-      this.player.inventory.setGrid(rows, cols)
-    } else {
-      this.player.inventory.x = 435
-      this.player.inventory.y = 20
-      this.player.inventory.slotSize = 40
-      this.player.inventory.setGrid(10, 8)
-    }
-  }
+	/* ============================================================
+	 * Geometría derivada
+	 * ============================================================ */
 
-  mouseDown(mouseX, mouseY, e) {
-    if (!this.isOpen) return
-    const tabWidth = this.container.header.tab.width
-    const tabHeight = this.container.header.height
+	get contentTopY() {
+		return this.y + this.padding + this.tabHeight + this.tabsGap
+	}
 
-    this.tabs.forEach((t, idx) => {
-      const tabX = this.game.width * 0.05 + tabWidth * idx
-      const tabY = this.game.height * 0.05
+	get contentLeftX() {
+		return this.x + this.padding
+	}
 
-      if (
-        mouseX >= tabX &&
-        mouseX <= tabX + tabWidth &&
-        mouseY >= tabY &&
-        mouseY <= tabY + tabHeight
-      ) {
-        this.selectedTab = t
-      }
-    })
-  }
-  mouseMove(mouseX, mouseY, e) {
-    /* CODE FOR CHECK HOVER */
-    // let mouseOverMenu =
-    // 	mouseX > this.x &&
-    // 	mouseX < this.x + this.width &&
-    // 	mouseY > this.y &&
-    // 	mouseY < this.y + this.height
-    // if (mouseOverMenu) {}
-  }
-  mouseUp(mouseX, mouseY, e) {
-    const trashSize = 64
-    const trashX = this.player.inventory.x - trashSize
-    const trashY = this.container.content.y
+	get contentWidth() {
+		return this.width - this.padding * 2
+	}
 
-    if (
-      mouseX > trashX &&
-      mouseX < trashX + trashSize &&
-      mouseY > trashY &&
-      mouseY < trashY + trashSize &&
-      this.selectedTab === this.tabs[0]
-    ) {
-      console.log('soltado en trash')
-    }
-  }
+	get contentHeight() {
+		return (
+			this.height -
+			this.padding -
+			this.tabHeight -
+			this.tabsGap -
+			this.padding
+		)
+	}
 
-  #container() {
-    this.c.fillStyle = '#00000055'
-    this.c.fillRect(this.x, this.y, this.width, this.height)
-  }
-  #header() {
-    this.c.fillStyle = '#00ff0055'
-    this.c.fillRect(this.x, this.y, this.width, this.container.header.height)
-    this.#createTabs()
-  }
-  #createTabs() {
-    this.tabs.forEach((t, idx) => {
-      // Resaltar la pestaña activa
-      // Rojo para la pestaña seleccionada
-      if (this.selectedTab === t) this.c.fillStyle = '#ff000055'
-      // Azul para las pestañas inactivas
-      else this.c.fillStyle = '#0000ff55'
+	#scrollAreaFor(tabName) {
+		if (this._scrollAreas[tabName]) return this._scrollAreas[tabName]
+		/* Tamaño provisional; el tab lo recrea con su altura real. */
+		const area = new ScrollableArea({
+			x: this.contentLeftX,
+			y: this.contentTopY,
+			width: this.contentWidth,
+			height: this.contentHeight,
+			contentHeight: 1, /* se actualiza en cada render */
+		})
+		this._scrollAreas[tabName] = area
+		return area
+	}
 
-      const tabX = this.x + this.container.header.tab.width * idx
-      this.c.fillRect(
-        tabX,
-        this.y,
-        this.container.header.tab.width,
-        this.container.header.height
-      )
-      Text({
-        ctx: this.c,
-        x: tabX + this.container.header.tab.width / 3.8, // buscar forma de centrar
-        y: this.y + this.container.header.height / 2 + 8,
-        size: 24,
-        label: t,
-      })
-    })
-  }
-  #menuContent() {
-    this.container.content.y = this.y + this.container.header.height
-    // const contentY = this.y + this.container.header.height
-    this.container.content.height = this.height - this.container.header.height
+	#resetScroll() {
+		const area = this._scrollAreas[this.selectedTab]
+		if (area) area.reset()
+	}
 
-    // Fondo del área de contenido
-    this.c.fillStyle = '#ffffff33' // Blanco semi-transparente
-    this.c.fillRect(
-      this.x,
-      this.container.content.y,
-      this.width,
-      this.container.content.height
-    )
+	/* ============================================================
+	 * Update
+	 * ============================================================ */
 
-		// Mostrar contenido según la pestaña seleccionada
+	update() {
+		if (this.isOpen) {
+			if (this.x > this.targetX) {
+				this.x = Math.max(this.targetX, this.x - this.animationSpeed)
+			}
+			if (this.x === this.targetX && !this._drawInventory) {
+				this.#repositionInventory()
+				this._drawInventory = true
+			}
+		} else {
+			if (this.x < this.game.width + 10) {
+				this.x = Math.min(this.game.width + 10, this.x + this.animationSpeed)
+			}
+			/* Menu cerrado → el inventario queda oculto. Reseteamos
+			 * la posición para tener un estado consistente, pero no
+			 * lo dibujamos. */
+			if (this.x === this.game.width + 10 && this._drawInventory) {
+				this.#resetInventory()
+				this._drawInventory = false
+			}
+		}
+	}
+
+	#repositionInventory() {
+		const rows = 10
+		const cols = 8
+		const slotSize = Math.max(20, Math.floor(this.contentHeight / rows))
+
+		/* Deja lugar para la papelera a la izquierda. */
+		const inventoryW = slotSize * cols
+		const inventoryX = this.contentLeftX + (this.contentWidth - inventoryW)
+
+		this.player.inventory.slotSize = slotSize
+		this.player.inventory.x = inventoryX
+		this.player.inventory.y = this.contentTopY
+		this.player.inventory.setGrid(rows, cols)
+	}
+
+	#resetInventory() {
+		/* HUD: inventario compacto en la esquina superior derecha.
+		 * slotSize menor al del menu para no dominar la pantalla. */
+		const hudSlotSize = 28
+		this.player.inventory.slotSize = hudSlotSize
+		this.player.inventory.x = this.game.width - hudSlotSize * 10 - 8
+		this.player.inventory.y = 8
+		this.player.inventory.setGrid(10, 8)
+	}
+
+	/* ============================================================
+	 * Render
+	 * ============================================================ */
+
+	render() {
+		/* Panel + tabs + contenido: se dibuja mientras el menu esté
+		 * abierto O animando (en cualquier dirección). Si ya terminó
+		 * de salir (x totalmente off-screen y cerrado), no se dibuja. */
+		const isAnimatingIn = this.isOpen && this.x > this.targetX
+		const isAnimatingOut = !this.isOpen && this.x < this.game.width + 10
+		const drawPanel = this.isOpen || isAnimatingIn || isAnimatingOut
+
+		if (drawPanel) {
+			const panel = new Panel({
+				x: this.x,
+				y: this.y,
+				width: this.width,
+				height: this.height,
+				padding: this.padding,
+			})
+			const inner = panel.draw(this.c)
+
+			this.tabs.x = inner.x
+			this.tabs.y = inner.y
+			this.tabs.width = inner.width
+			this.tabs.height = this.tabHeight
+			this.tabs.draw(this.c)
+
+			const contentY = inner.y + this.tabHeight + this.tabsGap
+			const contentH = inner.y + inner.height - contentY
+			if (contentH > 0) {
+				this.#drawTabContent(this.c, inner.x, contentY, inner.width, contentH)
+			}
+		}
+
+		/* Inventario: solo se dibuja con menu totalmente abierto Y en
+		 * la tab "Inventario". En las otras tabs se ve el contenido
+		 * propio de cada tab. */
+		if (this._drawInventory && this.selectedTab === 'Inventario') {
+			this.player.inventory.draw()
+		}
+	}
+
+	#drawTabContent(c, x, y, w, h) {
 		switch (this.selectedTab) {
 			case 'Inventario':
-				this.#drawInventoryContent()
+				this.#drawInventoryTab(c, x, y, w, h)
 				break
 			case 'Crear':
-				this.#drawCraftingContent()
+				this.#drawCraftingTab(c, x, y, w, h)
 				break
 			case 'Estadisticas':
-				this.#drawStatsContent()
+				this.#drawStatsTab(c, x, y, w, h)
 				break
 			case 'Misiones':
-				this.#drawQuestsContent()
+				this.#drawQuestsTab(c, x, y, w, h)
 				break
 			case 'Logros':
-				this.#drawAchievementsContent()
-				break
-			default:
+				this.#drawAchievementsTab(c, x, y, w, h)
 				break
 		}
 	}
 
-  #drawInventoryContent() {
-    const y = this.container.content.y
+	/* ============================================================
+	 * Tabs (cada uno puede ser scrollable o no)
+	 * ============================================================ */
 
-    // box for drop items
-    this.c.fillStyle = 'red'
-    const trashSize = 64
-    const trashX = this.x + 340
-    const trashY = y + 20
-    this.c.fillRect(trashX, trashY, trashSize, trashSize)
+	#drawInventoryTab(c, x, y, w, h) {
+		const trashSize = this.trashSize
+		const trashX = x + 4
+		const trashY = y + 4
 
-    this.player.inventory.draw(this.c)
-  }
-  #drawCraftingContent() {
-    const x = this.x
-    const y = this.container.content.y
-    const height = this.container.content.height
+		/* Papelera */
+		c.fillStyle = 'rgba(120, 30, 30, 0.55)'
+		c.fillRect(trashX, trashY, trashSize, trashSize)
+		c.strokeStyle = THEME.borderInner
+		c.lineWidth = 1.5
+		c.strokeRect(trashX + 0.5, trashY + 0.5, trashSize - 1, trashSize - 1)
+		c.fillStyle = '#f4e4c1'
+		c.font = `bold 12px ${fontStyles.body.name}, Arial, sans-serif`
+		c.textAlign = 'center'
+		c.textBaseline = 'middle'
+		c.fillText('Tirar', trashX + trashSize / 2, trashY + trashSize / 2)
+		c.textAlign = 'left'
+		c.textBaseline = 'alphabetic'
 
-    this.c.fillStyle = '#00ffff55' // Azul cian para el área de crafteo
-    this.c.fillRect(x, y, this.width, height)
+		/* El inventario NO se dibuja acá; lo dibuja `render()` al final
+		 * según `_drawInventory` y la posición actual del inventario
+		 * (HUD o dentro del menu). Ver bloque final de `render()`. */
+	}
 
-    // Ejemplo: Área de entrada para materiales
-    const inputAreaX = x + this.width * 0.1
-    const inputAreaY = y + height * 0.1
-    const inputAreaSize = 100
+	#drawCraftingTab(c, x, y, w, h) {
+		Text({
+			ctx: c,
+			x: x + 12,
+			y: y + 24,
+			size: 18,
+			label: 'Crafteo',
+			color: THEME.selected,
+		})
 
-    this.c.fillStyle = '#ff00ff55' // Magenta para resaltar áreas interactivas
-    this.c.fillRect(inputAreaX, inputAreaY, inputAreaSize, inputAreaSize)
+		const inputSize = Math.min(100, h - 80)
+		const inputX = x + 30
+		const inputY = y + 50
+		c.fillStyle = 'rgba(80, 60, 140, 0.45)'
+		c.fillRect(inputX, inputY, inputSize, inputSize)
+		c.strokeStyle = THEME.borderInner
+		c.lineWidth = 1.5
+		c.strokeRect(inputX + 0.5, inputY + 0.5, inputSize - 1, inputSize - 1)
+		c.fillStyle = THEME.textHint
+		c.font = `12px ${fontStyles.body.name}, Arial, sans-serif`
+		c.textAlign = 'center'
+		c.fillText('Materiales', inputX + inputSize / 2, inputY + inputSize + 18)
+		c.textAlign = 'left'
 
-    // Ejemplo: Botón de "Crear"
-    const buttonX = x + this.width - 170
-    const buttonY = y + height - 70
-    const buttonWidth = 150
-    const buttonHeight = 50
+		const btnW = 150
+		const btnH = 50
+		const btnX = x + w - btnW - 30
+		const btnY = y + h - btnH - 20
+		c.fillStyle = THEME.buttonIdleBg
+		c.fillRect(btnX, btnY, btnW, btnH)
+		c.strokeStyle = THEME.borderInner
+		c.lineWidth = 2
+		c.strokeRect(btnX + 1, btnY + 1, btnW - 2, btnH - 2)
 
-    this.c.fillStyle = '#ffff0055' // Amarillo para el botón
-    this.c.fillRect(buttonX, buttonY, buttonWidth, buttonHeight)
+		c.fillStyle = THEME.text
+		c.font = `bold 22px ${fontStyles.body.name}, Arial, sans-serif`
+		c.textAlign = 'center'
+		c.textBaseline = 'middle'
+		c.fillText('Crear', btnX + btnW / 2, btnY + btnH / 2)
+		c.textAlign = 'left'
+		c.textBaseline = 'alphabetic'
+	}
 
-    Text({
-      ctx: this.c,
-      x: buttonX + buttonWidth / 2,
-      y: buttonY + buttonHeight / 2 + 8,
-      size: 24,
-      label: 'Crear',
-      align: 'center',
-    })
-  }
-	#drawStatsContent() {
-		const x = this.x
-		const y = this.container.content.y
-		const height = this.container.content.height
-		const width = this.width
-
-		// Fondo
-		this.c.fillStyle = '#1a1a1a99'
-		this.c.fillRect(x, y, width, height)
-
+	#drawStatsTab(c, x, y, w, h) {
 		const p = this.player
 		const labelSize = 18
-		const valueSize = 18
 		const rowHeight = 38
-		const colWidth = width / 2
+		const sectionGap = 30
+		const titleSize = 22
+		const titleGap = 8
 
-		// Título: Habilidades
-		Text({
-			ctx: this.c,
-			x: x + 20,
-			y: y + 30,
-			size: 22,
-			label: 'Habilidades',
-			align: 'left',
-		})
-
-		// Cada skill con su barra
+		/* Calcular altura total del contenido (natural, sin clip) */
 		const skills = p.skills ?? {}
 		const skillKeys = Object.keys(skills)
-		skillKeys.forEach((key, i) => {
-			const s = skills[key]
-			const rowY = y + 60 + i * rowHeight
-			const barX = x + 20
-			const barW = colWidth - 40
-			const barH = 16
-
-			Text({
-				ctx: this.c,
-				x: barX,
-				y: rowY,
-				size: labelSize,
-				label: this.#formatKey(key),
-				align: 'left',
-			})
-
-			// barra de progreso (0-100)
-			this.c.fillStyle = '#333333'
-			this.c.fillRect(barX, rowY + 4, barW, barH)
-			this.c.fillStyle = '#3aa0ff'
-			this.c.fillRect(barX, rowY + 4, barW * (s.value / 100), barH)
-
-			Text({
-				ctx: this.c,
-				x: barX + barW + 10,
-				y: rowY + 4,
-				size: valueSize,
-				label: `${s.value}`,
-				align: 'left',
-			})
-		})
-
-		// Título: Afinidad
-		const affinitiesStartY = y + 60 + skillKeys.length * rowHeight + 20
-		Text({
-			ctx: this.c,
-			x: x + 20,
-			y: affinitiesStartY,
-			size: 22,
-			label: 'Afinidad',
-			align: 'left',
-		})
-
 		const aff = p.affinities ?? {}
 		const affKeys = Object.keys(aff)
-		affKeys.forEach((key, i) => {
-			const value = aff[key]
-			const rowY = affinitiesStartY + 30 + i * rowHeight
-			const isMain = p.mainAffinity === key
-			const isSecondary = p.secondaryAffinity === key
+		const skillsH = titleSize + titleGap + skillKeys.length * rowHeight
+		const affH = titleSize + titleGap + affKeys.length * rowHeight
+		const contentH = skillsH + sectionGap + affH
 
+		/* ScrollableArea: si entra, se ve entero; si no, scroll */
+		const area = this.#scrollAreaFor('Estadisticas')
+		area.x = x
+		area.y = y
+		area.width = w
+		area.height = h
+		area.contentHeight = contentH
+
+		area.draw(c, (c, cx, cy, cw, ch) => {
+			/* Título skills */
 			Text({
-				ctx: this.c,
-				x: x + 20,
-				y: rowY,
-				size: labelSize,
-				label: this.#formatKey(key) + (isMain ? ' (principal)' : isSecondary ? ' (secundaria)' : ''),
-				align: 'left',
+				ctx: c,
+				x: cx + 12,
+				y: cy + titleSize,
+				size: titleSize,
+				label: 'Habilidades',
+				color: THEME.selected,
 			})
 
-			// 10 niveles
-			for (let lvl = 0; lvl < 10; lvl++) {
-				const cx = x + 220 + lvl * 18
-				const cy = rowY + 4
-				this.c.fillStyle = lvl < value ? this.#affinityColor(key) : '#333'
-				this.c.fillRect(cx, cy, 14, 14)
+			const barW = cw * 0.55
+			skillKeys.forEach((key, i) => {
+				const s = skills[key]
+				const rowY = cy + titleSize + titleGap + i * rowHeight
+				const barX = cx + 20
+
+				Text({
+					ctx: c,
+					x: barX,
+					y: rowY + labelSize / 2,
+					size: labelSize,
+					label: this.#formatKey(key),
+					color: THEME.text,
+				})
+
+				const barY = rowY + 6
+				c.fillStyle = '#333'
+				c.fillRect(barX + 160, barY, barW, 16)
+				c.fillStyle = THEME.selected
+				c.fillRect(barX + 160, barY, barW * (s.value / 100), 16)
+
+				Text({
+					ctx: c,
+					x: barX + 160 + barW + 10,
+					y: barY + labelSize / 2,
+					size: labelSize,
+					label: `${s.value}`,
+					color: THEME.text,
+				})
+			})
+
+			/* Título afinidad */
+			const affTitleY = cy + titleSize + titleGap + skillKeys.length * rowHeight + sectionGap
+			Text({
+				ctx: c,
+				x: cx + 12,
+				y: affTitleY,
+				size: titleSize,
+				label: 'Afinidad',
+				color: THEME.selected,
+			})
+
+			affKeys.forEach((key, i) => {
+				const value = aff[key]
+				const rowY = affTitleY + titleGap + i * rowHeight
+				const isMain = p.mainAffinity === key
+				const isSecondary = p.secondaryAffinity === key
+				const lvlX = cx + 200
+
+				Text({
+					ctx: c,
+					x: cx + 20,
+					y: rowY + labelSize / 2,
+					size: labelSize,
+					label:
+						this.#formatKey(key) +
+						(isMain ? ' (principal)' : isSecondary ? ' (secundaria)' : ''),
+					color: THEME.text,
+				})
+
+				for (let lvl = 0; lvl < 10; lvl++) {
+					c.fillStyle = lvl < value ? this.#affinityColor(key) : '#333'
+					c.fillRect(lvlX + lvl * 18, rowY + 6, 14, 14)
+				}
+			})
+		})
+	}
+
+	#drawQuestsTab(c, x, y, w, h) {
+		const qm = this.game.questManager
+		const active = qm?.getActiveQuests?.() ?? []
+		const completed = Array.from(qm?.completedQuests ?? [])
+		const rowHeight = 60
+		const titleSize = 22
+		const titleGap = 10
+		const sectionGap = 20
+		const padTop = 16
+
+		/* Alturas naturales */
+		const activeTitleH = titleSize + titleGap
+		const activeRowsH = Math.max(rowHeight, active.length * rowHeight)
+		const completedTitleH = active.length === 0 ? 0 : titleSize + titleGap
+		const completedRowsH = Math.max(
+			0,
+			completed.length * 26 + (completed.length === 0 ? 30 : 0),
+		)
+		const contentH =
+			padTop + activeTitleH + activeRowsH + sectionGap + completedTitleH + completedRowsH
+
+		const area = this.#scrollAreaFor('Misiones')
+		area.x = x
+		area.y = y
+		area.width = w
+		area.height = h
+		area.contentHeight = contentH
+
+		area.draw(c, (c, cx, cy, cw, ch) => {
+			let curY = cy + padTop
+
+			Text({
+				ctx: c,
+				x: cx + 20,
+				y: curY + titleSize,
+				size: titleSize,
+				label: 'Misiones activas',
+				color: THEME.selected,
+			})
+			curY += activeTitleH
+
+			if (active.length === 0) {
+				Text({
+					ctx: c,
+					x: cx + 24,
+					y: curY + 16,
+					size: 16,
+					label: 'No hay misiones activas.',
+					color: THEME.textDim,
+				})
+				curY += rowHeight
+			} else {
+				active.forEach((q) => {
+					Text({
+						ctx: c,
+						x: cx + 24,
+						y: curY + 18,
+						size: 18,
+						label: `• ${q.title} (${q.branch})`,
+						color: THEME.text,
+					})
+					const step = q.steps?.[q.currentStep]
+					if (step?.description) {
+						Text({
+							ctx: c,
+							x: cx + 44,
+							y: curY + 40,
+							size: 14,
+							label: `→ ${step.description}`,
+							color: THEME.textDim,
+						})
+					}
+					curY += rowHeight
+				})
+			}
+
+			if (active.length > 0) {
+				curY += sectionGap
+				Text({
+					ctx: c,
+					x: cx + 20,
+					y: curY + titleSize,
+					size: titleSize,
+					label: 'Misiones completadas',
+					color: THEME.selected,
+				})
+				curY += completedTitleH
+
+				if (completed.length === 0) {
+					Text({
+						ctx: c,
+						x: cx + 24,
+						y: curY + 16,
+						size: 16,
+						label: '—',
+						color: THEME.textHint,
+					})
+				} else {
+					completed.forEach((qId) => {
+						const q = qm.getById(qId)
+						Text({
+							ctx: c,
+							x: cx + 24,
+							y: curY + 16,
+							size: 16,
+							label: `✓ ${q?.title ?? qId}`,
+							color: THEME.textDim,
+						})
+						curY += 26
+					})
+				}
 			}
 		})
 	}
 
-	/** Dibuja la pestaña de Misiones (quests activas y completadas). */
-	#drawQuestsContent() {
-		const x = this.x
-		const y = this.container.content.y
-		const width = this.width
-		const height = this.container.content.height
-
-		this.c.fillStyle = '#1a1a1a99'
-		this.c.fillRect(x, y, width, height)
-
-		const qm = this.game.questManager
-		const active = qm?.getActiveQuests?.() ?? []
-		const completed = Array.from(qm?.completedQuests ?? [])
-
-		let rowY = y + 30
-		const rowHeight = 60
-		const padX = x + 20
-
+	#drawAchievementsTab(c, x, y, w, h) {
 		Text({
-			ctx: this.c,
-			x: padX,
-			y: rowY,
+			ctx: c,
+			x: x + 12,
+			y: y + 24,
 			size: 22,
-			label: 'Misiones activas',
-			align: 'left',
+			label: 'Logros',
+			color: THEME.selected,
 		})
-		rowY += 30
-
-		if (active.length === 0) {
+		const achievements = ['Explorador', 'Artesano', 'Héroe']
+		achievements.forEach((achievement, idx) => {
 			Text({
-				ctx: this.c,
-				x: padX,
-				y: rowY,
-				size: 16,
-				label: 'No hay misiones activas.',
-				align: 'left',
+				ctx: c,
+				x: x + 24,
+				y: y + 56 + idx * 40,
+				size: 18,
+				label: `• ${achievement}`,
+				color: THEME.text,
 			})
-			rowY += rowHeight
-		} else {
-			active.forEach((q) => {
-				Text({
-					ctx: this.c,
-					x: padX,
-					y: rowY,
-					size: 18,
-					label: `• ${q.title} (${q.branch})`,
-					align: 'left',
-				})
-				const step = q.steps?.[q.currentStep]
-				if (step?.description) {
-					Text({
-						ctx: this.c,
-						x: padX + 20,
-						y: rowY + 22,
-						size: 14,
-						label: `   → ${step.description}`,
-						align: 'left',
-					})
-				}
-				rowY += rowHeight
-			})
-		}
-
-		rowY += 20
-		Text({
-			ctx: this.c,
-			x: padX,
-			y: rowY,
-			size: 22,
-			label: 'Misiones completadas',
-			align: 'left',
 		})
-		rowY += 30
-		if (completed.length === 0) {
-			Text({
-				ctx: this.c,
-				x: padX,
-				y: rowY,
-				size: 16,
-				label: '—',
-				align: 'left',
-			})
-		} else {
-			completed.forEach((qId) => {
-				const q = qm.getById(qId)
-				Text({
-					ctx: this.c,
-					x: padX,
-					y: rowY,
-					size: 16,
-					label: `✓ ${q?.title ?? qId}`,
-					align: 'left',
-				})
-				rowY += 26
-			})
-		}
 	}
 
-	/** Capitaliza y traduce nombres de keys (camelCase -> "Camel Case"). */
+	/* ============================================================
+	 * Helpers
+	 * ============================================================ */
+
 	#formatKey(key) {
 		const map = {
 			perspicacia: 'Perspicacia',
@@ -444,7 +559,6 @@ export class MenuGame {
 		return map[key] ?? key
 	}
 
-	/** Color asociado a cada afinidad. */
 	#affinityColor(key) {
 		const colors = {
 			rebeldia: '#c0392b',
@@ -453,45 +567,85 @@ export class MenuGame {
 		}
 		return colors[key] ?? '#888'
 	}
-  #drawAchievementsContent() {
-    const x = this.x
-    const y = this.container.content.y
-    const height = this.container.content.height
-    const width = this.width
 
-    this.c.fillStyle = '#ffffff55' // Blanco semi-transparente
-    this.c.fillRect(x, y, width, height)
+	/* ============================================================
+	 * Toggle / eventos
+	 * ============================================================ */
 
-    // Ejemplo: Lista de logros
-    const achievements = ['Explorador', 'Artesano', 'Héroe']
-    achievements.forEach((achievement, idx) => {
-      const textY = y + idx * 40 + 40
-      Text({
-        ctx: this.c,
-        x: x + width * 0.1,
-        y: textY,
-        size: 24,
-        label: achievement,
-        align: 'left',
-      })
-    })
-  }
+	toggle() {
+		this.isOpen = !this.isOpen
+		if (this.isOpen) {
+			/* Posición inicial fuera de pantalla; update() lo desliza.
+			 * Ocultamos el inventario durante la animación para que no
+			 * "flashee" en posición HUD mientras el menu desliza. */
+			this.x = this.game.width + 10
+			this._drawInventory = false
+		} else {
+			/* Al cerrar, reseteamos el inventario a la posición del HUD
+			 * inmediatamente. Seguimos ocultándolo hasta que el menu
+			 * salga totalmente de pantalla. */
+			this.#resetInventory()
+			this._drawInventory = false
+		}
+	}
 
-  #calculateContainerDimensions() {
-    this.width = this.game.width * 0.9
-    this.height = this.game.height * 0.9
-    this.x = this.game.width * 0.05
-    this.y = this.game.height * 0.05
+	mouseDown(mouseX, mouseY, e) {
+		if (!this.isOpen) return
+		/* Si la click cae dentro del panel, lo absorbemos */
+		if (
+			mouseX < this.x ||
+			mouseX > this.x + this.width ||
+			mouseY < this.y ||
+			mouseY > this.y + this.height
+		) {
+			return
+		}
+		/* Primero: scrollbar del tab activo. */
+		const area = this._scrollAreas[this.selectedTab]
+		if (area && area.handleMouseDown(mouseX, mouseY)) return
+		/* Después: tabs. */
+		this.tabs.handleClick(mouseX, mouseY)
+	}
 
-    this.container = {
-      header: {
-        height: 60,
-        tab: { width: this.width / this.tabs.length },
-      },
-      content: {
-        y: this.y + 60, // Header height
-        height: this.height - 60, // Remaining height
-      },
-    }
-  }
+	mouseMove(mouseX, mouseY, e) {
+		if (!this.isOpen) return
+		const area = this._scrollAreas[this.selectedTab]
+		if (area) area.handleMouseMove(mouseX, mouseY)
+		this.tabs.handleHover(mouseX, mouseY)
+	}
+
+	mouseUp(mouseX, mouseY, e) {
+		if (!this.isOpen) return
+		const area = this._scrollAreas[this.selectedTab]
+		if (area) area.handleMouseUp()
+		/* Drop en la papelera (Inventario tab) */
+		if (this.selectedTab !== 'Inventario') return
+		const trashSize = this.trashSize
+		const trashX = this.x + this.padding + 4
+		const trashY = this.contentTopY + 4
+		if (
+			mouseX > trashX &&
+			mouseX < trashX + trashSize &&
+			mouseY > trashY &&
+			mouseY < trashY + trashSize
+		) {
+			// TODO: eliminar el item arrastrado (player.inventory.draggedItem)
+			console.log('soltado en trash')
+		}
+	}
+
+	wheel(e) {
+		if (!this.isOpen) return
+		/* Solo si la rueda cae dentro del panel. */
+		if (
+			e.offsetX < this.x ||
+			e.offsetX > this.x + this.width ||
+			e.offsetY < this.y ||
+			e.offsetY > this.y + this.height
+		) {
+			return
+		}
+		const area = this._scrollAreas[this.selectedTab]
+		if (area) area.handleWheel(e.deltaY)
+	}
 }
